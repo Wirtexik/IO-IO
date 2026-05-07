@@ -1,5 +1,5 @@
-Clonujesz repo 
-W jakiś środowisku odpalasz
-W terminalu w visualu wpisujesz npm install (musi być zainstalowany node.js)
-Potem wpisać node server.js 
-odpalasz localhosta 
+1.Clonujesz repo 
+2.W jakiś środowisku odpalasz
+3.W terminalu w visualu wpisujesz npm install (musi być zainstalowany node.js)
+4.Potem wpisać node server.js 
+5.odpalasz localhosta 
