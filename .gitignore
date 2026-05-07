@@ -1,0 +1,48 @@
+# ==========================================
+# Zależności Node.js (NAJWAŻNIEJSZE)
+# ==========================================
+# Nigdy nie wysyłamy pobranych paczek na GitHuba. 
+# Każdy w zespole pobiera je sam komendą `npm install`.
+node_modules/
+
+# ==========================================
+# Zmienne środowiskowe i sekrety
+# ==========================================
+# Tutaj w przyszłości będziecie trzymać hasła do bazy danych MySQL.
+# Tych plików nikt poza Wami nie może zobaczyć!
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+
+# ==========================================
+# Logi i błędy (pliki generowane automatycznie)
+# ==========================================
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# ==========================================
+# Pliki systemowe (śmieci z Windowsa i macOS)
+# ==========================================
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# ==========================================
+# Ustawienia edytorów kodu (Cursor / VS Code / IntelliJ)
+# ==========================================
+# Każdy w zespole może mieć własne ustawienia motywu czy wtyczek, 
+# nie nadpisujcie ich sobie nawzajem.
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
