@@ -1,14 +1,29 @@
 CREATE TABLE IF NOT EXISTS Ksiazki (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    tytul TEXT UNIQUE,
-    autor TEXT,
-    kategoria TEXT,
-    stan TEXT,
-    ilosc INTEGER
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    tytul VARCHAR(255) UNIQUE NOT NULL,
+    autor VARCHAR(255) NOT NULL,
+    kategoria ENUM('Fantastyka', 'Thriller', 'Romans', 'Sci-Fi', 'Horror', 'Dziecięca', 'Biografia', 'Reportaż', 'Historyczna', 'Przygodowa', 'Młodzieżowa', 'Powieść', 'Dramat', 'Epopeja', 'Wiersz', 'Epika', 'Inna') NOT NULL,
+    stan ENUM('Nowa', 'Idealny', 'Bardzo dobry', 'Dobry', 'Dostateczny') NOT NULL,
+    ilosc INT NOT NULL DEFAULT 1,
+    wlasciciel VARCHAR(255) NOT NULL
 );
 
-INSERT OR IGNORE INTO Ksiazki (tytul, autor, kategoria, stan, ilosc) VALUES
-('Władca Pierścieni', 'J.R.R. Tolkien', 'Fantastyka', 'Bardzo dobry', 1),
-('Diuna', 'Frank Herbert', 'Sci-Fi', 'Dobry', 2),
-('Wiedźmin', 'Andrzej Sapkowski', 'Fantastyka', 'Idealny', 1),
-('Harry Potter i Kamień Filozoficzny', 'J.K. Rowling', 'Młodzieżowa', 'Dostateczny', 3);
+CREATE TABLE IF NOT EXISTS wishlist (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    tytul VARCHAR(255) UNIQUE NOT NULL,
+    autor VARCHAR(255) NOT NULL,
+    kategoria ENUM('Fantastyka', 'Thriller', 'Romans', 'Sci-Fi', 'Horror', 'Dziecięca', 'Biografia', 'Reportaż', 'Historyczna', 'Przygodowa', 'Młodzieżowa', 'Powieść', 'Dramat', 'Epopeja', 'Wiersz', 'Epika', 'Inna') NOT NULL,
+    stan ENUM('Nowa', 'Idealny', 'Bardzo dobry', 'Dobry', 'Dostateczny') NOT NULL,
+    wlasciciel VARCHAR(255) NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS konta (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    login VARCHAR(255) UNIQUE NOT NULL,
+    email VARCHAR(255) UNIQUE NOT NULL,
+    haslo VARCHAR(255) NOT NULL,
+    typ_konta ENUM('Użytkownik', 'Moderator') NOT NULL DEFAULT 'Użytkownik'
+);
+
+INSERT IGNORE INTO konta (login, email, haslo, typ_konta) VALUES
+('admin', 'admin@bookexchange.pl', 'admin123', 'Moderator');

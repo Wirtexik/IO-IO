@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Instant Book Exchange - Zaloguj się / Zarejestruj</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar">
+        <a href="index.html" class="nav-brand" style="text-decoration: none;">Instant Book Exchange</a>
+        <div class="nav-links">
+            <a href="index.html">Strona główna</a>
+            <a href="shelf.html">Moja półka</a>
+            <a href="#">Aukcje</a>
+            <a href="zaloguj.html" class="active-link">Zaloguj się</a>
+        </div>
+    </nav>
+
+    <main class="auth-container">
+        <div class="auth-card">
+            <div class="auth-tabs">
+                <div class="auth-tab active" onclick="switchAuthTab('login')">Logowanie</div>
+                <div class="auth-tab" onclick="switchAuthTab('register')">Rejestracja</div>
+            </div>
+            
+            <div class="auth-body">
+                <form id="login-form" class="auth-form active" onsubmit="handleLogin(event)">
+                    <h3>Witaj ponownie</h3>
+                    <p>Zaloguj się, aby zarządzać swoją wirtualną półką.</p>
+                    
+                    <input type="text" id="login-input" placeholder="Login lub e-mail" required>
+                    <input type="password" id="login-haslo" placeholder="Hasło" required>
+                    
+                    <div id="login-error" style="color: #dc2626; font-size: 14px; margin-top: 5px; display: none;"></div>
+                    
+                    <button type="submit" class="btn-primary" style="width: 100%; padding: 12px; margin-top: 5px;">Zaloguj się</button>
+                </form>
+
+                <form id="register-form" class="auth-form" onsubmit="handleRegister(event)">
+                    <h3>Stwórz nowe konto</h3>
+                    <p>Dołącz do społeczności i wymieniaj książki za darmo.</p>
+                    
+                    <input type="text" id="reg-login" placeholder="Login" required>
+                    <input type="email" id="reg-email" placeholder="Adres e-mail" required>
+                    <input type="password" id="reg-haslo" placeholder="Hasło" required>
+                    <input type="password" id="reg-haslo2" placeholder="Powtórz hasło" required>
+                    
+                    <div id="reg-error" style="color: #dc2626; font-size: 14px; margin-top: 5px; display: none;"></div>
+                    
+                    <button type="submit" class="btn-success" style="width: 100%; padding: 12px; margin-top: 5px;">Zarejestruj się</button>
+                </form>
+            </div>
+        </div>
+    </main>
+
+    <div id="registerSuccessModal" class="modal">
+        <div class="modal-content" style="width: 320px; text-align: center;">
+            <span class="close" onclick="closeRegisterSuccessModal()">&times;</span>
+            <h3 style="margin-bottom: 15px; color: var(--success); font-size: 20px;">Rejestracja udana!</h3>
+            <p style="margin-bottom: 20px; color: var(--text-muted); font-size: 14px;">Utworzyłeś konto. Pomyślnie zapisano Twoje dane w bazie.<br><br>Teraz możesz się zalogować.</p>
+            <button class="btn-success" onclick="closeRegisterSuccessModal()" style="width: 100%; padding: 12px;">Przejdź do logowania</button>
+        </div>
+    </div>
+
+    <footer>
+        <div class="footer-col">
+            <h4>Instant Book Exchange</h4>
+            <p>Wymieniaj książki, oszczędzaj pieniądze i chroń środowisko.</p>
+        </div>
+        <div class="footer-col">
+            <h4>Przydatne linki</h4>
+            <a href="#">Jak to działa?</a>
+            <a href="#">Regulamin</a>
+            <a href="#">Polityka prywatności</a>
+        </div>
+        <div class="footer-col">
+            <h4>Kontakt</h4>
+            <a href="#">Facebook</a>
+            <a href="#">Instagram</a>
+            <a href="#">pomoc@bookexchange.pl</a>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+    <script>
+        // Przełączanie zakładek
+        function switchAuthTab(tab) {
+            const tabs = document.querySelectorAll('.auth-tab');
+            const loginForm = document.getElementById('login-form');
+            const registerForm = document.getElementById('register-form');
+
+            if (tab === 'login') {
+                tabs[0].classList.add('active');
+                tabs[1].classList.remove('active');
+                loginForm.classList.add('active');
+                registerForm.classList.remove('active');
+            } else {
+                tabs[0].classList.remove('active');
+                tabs[1].classList.add('active');
+                loginForm.classList.remove('active');
+                registerForm.classList.add('active');
+            }
+        }
+
+        // Obsługa logowania
+        function handleLogin(e) {
+            e.preventDefault();
+            const login = document.getElementById('login-input').value;
+            const haslo = document.getElementById('login-haslo').value;
+            const errorDiv = document.getElementById('login-error');
+            
+            errorDiv.style.display = 'none';
+
+            fetch('/api/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ login, haslo })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.error) {
+                    errorDiv.textContent = "❌ " + data.error;
+                    errorDiv.style.display = 'block';
+                } else {
+                    localStorage.setItem('loggedInUser', data.login);
+                    window.location.href = 'index.html';
+                }
+            })
+            .catch(err => {
+                errorDiv.textContent = "❌ Błąd połączenia z serwerem.";
+                errorDiv.style.display = 'block';
+            });
+        }
+
+        // Obsługa rejestracji
+        function handleRegister(e) {
+            e.preventDefault();
+            const login = document.getElementById('reg-login').value;
+            const email = document.getElementById('reg-email').value;
+            const haslo = document.getElementById('reg-haslo').value;
+            const haslo2 = document.getElementById('reg-haslo2').value;
+            const errorDiv = document.getElementById('reg-error');
+            
+            errorDiv.style.display = 'none';
+
+            if (haslo !== haslo2) {
+                errorDiv.textContent = '❌ Hasła nie są identyczne!';
+                errorDiv.style.display = 'block';
+                return;
+            }
+
+            fetch('/api/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ login, email, haslo })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.error) {
+                    errorDiv.textContent = "❌ " + data.error;
+                    errorDiv.style.display = 'block';
+                } else {
+                    // WYŚWIETLENIE MODALA ZAMIAST ALERTU
+                    document.getElementById('registerSuccessModal').style.display = 'block';
+                    document.getElementById('register-form').reset();
+                }
+            })
+            .catch(err => {
+                errorDiv.textContent = "❌ Błąd połączenia z serwerem.";
+                errorDiv.style.display = 'block';
+            });
+        }
+
+        // Funkcja do zamykania modala sukcesu i przełączania na logowanie
+        function closeRegisterSuccessModal() {
+            document.getElementById('registerSuccessModal').style.display = 'none';
+            switchAuthTab('login'); // Automatycznie przełącza na okno logowania po kliknięciu
+        }
+
+        // Zamykanie modala przy kliknięciu w szare tło dookoła niego
+        window.addEventListener('click', function(event) {
+            let registerModal = document.getElementById('registerSuccessModal');
+            if (event.target == registerModal) {
+                closeRegisterSuccessModal();
+            }
+        });
+    </script>
+</body>
+</html>
