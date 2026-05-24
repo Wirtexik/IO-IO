@@ -147,4 +147,6 @@ Najlepiej robić `Pull origin`:
 - przed rozpoczęciem pracy
 - przed wysłaniem własnych commitów
 
+W razie problemów kontakt discord: danio2308
+
 ---
