@@ -14,7 +14,7 @@
             <a href="index.html">Strona główna</a>
             <a href="shelf.html">Moja półka</a>
             <a href="#">Aukcje</a>
-            <a href="zaloguj.html" class="active-link">Zaloguj się</a>
+            <a href="zaloguj.html" class="active-link">Zaloguj się / Zarejestruj</a>
         </div>
     </nav>
 
@@ -125,7 +125,10 @@
                     errorDiv.style.display = 'block';
                 } else {
                     localStorage.setItem('loggedInUser', data.login);
-                    window.location.href = 'index.html';
+                    if (data.email) {
+                        localStorage.setItem('loggedInUserEmail', data.email);
+                    }
+                    window.location.href = 'profil.html';
                 }
             })
             .catch(err => {
@@ -162,6 +165,7 @@
                     errorDiv.textContent = "❌ " + data.error;
                     errorDiv.style.display = 'block';
                 } else {
+                    localStorage.setItem('registeredUserEmail', email);
                     // WYŚWIETLENIE MODALA ZAMIAST ALERTU
                     document.getElementById('registerSuccessModal').style.display = 'block';
                     document.getElementById('register-form').reset();

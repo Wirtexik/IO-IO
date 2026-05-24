@@ -29,51 +29,16 @@ function setupNavbarAuth() {
     let loginLink = null;
 
     navLinks.forEach(link => {
-        if (link.getAttribute('href') === 'zaloguj.html') {
+        if (link.getAttribute('href') === 'profil.html') {
             loginLink = link;
         }
     });
 
     if (loggedInUser && loginLink) {
         loginLink.textContent = loggedInUser;
-        loginLink.setAttribute('href', '#');
+        loginLink.setAttribute('href', 'profil.html');
         loginLink.classList.remove('active-link');
-
-        loginLink.addEventListener('click', (e) => {
-            e.preventDefault();
-            openLogoutModal();
-        });
     }
-}
-
-function openLogoutModal() {
-    let logoutModal = document.getElementById('logoutModal');
-    
-    if (!logoutModal) {
-        logoutModal = document.createElement('div');
-        logoutModal.id = 'logoutModal';
-        logoutModal.className = 'modal';
-        logoutModal.innerHTML = `
-            <div class="modal-content" style="width: 320px; text-align: center;">
-                <span class="close" onclick="closeLogoutModal()">&times;</span>
-                <h3 style="margin-bottom: 20px; color: var(--dark); font-size: 20px;">Menu użytkownika</h3>
-                <p style="margin-bottom: 20px; color: var(--text-muted); font-size: 14px;">Czy chcesz się wylogować ze swojego konta?</p>
-                <button class="btn-primary" onclick="handleLogout()" style="background-color: var(--danger); width: 100%; padding: 12px;">Wyloguj się</button>
-            </div>
-        `;
-        document.body.appendChild(logoutModal);
-    }
-    logoutModal.style.display = 'block';
-}
-
-window.closeLogoutModal = function() {
-    const logoutModal = document.getElementById('logoutModal');
-    if (logoutModal) logoutModal.style.display = 'none';
-}
-
-window.handleLogout = function() {
-    localStorage.removeItem('loggedInUser');
-    window.location.href = 'index.html';
 }
 
 function openModal() {
