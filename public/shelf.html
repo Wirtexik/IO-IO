@@ -1,108 +1,126 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="pl">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Instant Book Exchange - Moja Półka</title>
-    <link rel="stylesheet" href="style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-</head>
-<body>
-    <nav class="navbar">
-        <a href="index.html" class="nav-brand" style="text-decoration: none;">Instant Book Exchange</a>
-        <div class="nav-links">
-            <a href="index.html">Strona główna</a>
-            <a href="shelf.html" class="active-link">Moja półka</a>
-            <a href="#">Aukcje</a>
-            <a href="profil.html">Zaloguj się</a>
-        </div>
-    </nav>
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Instant Book Exchange - Moja Półka</title>
+		<link rel="stylesheet" href="style.css" />
+		<link
+			href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+			rel="stylesheet"
+		/>
+	</head>
+	<body>
+		<nav class="navbar">
+			<a href="index.html" class="nav-brand">Instant Book Exchange</a>
+			<div class="nav-links">
+				<a href="index.html">Strona główna</a>
+				<a href="shelf.html" class="active-link">Moja półka</a>
+				<a href="#">Aukcje</a>
+				<a href="profil.html">Zaloguj się</a>
+			</div>
+		</nav>
 
-    <main class="view-section">
-        <div class="shelf-header">
-            <h2>Witaj, w swojej wirtualnej półce</h2>
-            <button class="btn-success" onclick="openModal()">Add + Dodaj nową książkę</button>
-        </div>
+		<main class="view-section">
+			<div class="shelf-header">
+				<h2>Witaj, w swojej wirtualnej półce</h2>
+				<button class="btn-success" onclick="openModal()">
+					+ Dodaj nową książkę
+				</button>
+			</div>
 
-        <div id="statusBox" style="display: none; text-align: center; margin-bottom: 20px; font-size: 14px;">
-            <div id="serverStatus"></div>
-            <div id="dbStatus"></div>
-        </div>
+			<div
+				id="statusBox"
+				class="text-center mb-20 text-muted-sm"
+				style="display: none"
+			>
+				<div id="serverStatus"></div>
+				<div id="dbStatus"></div>
+			</div>
 
-        <div class="shelf-container">
-            <div class="shelf-column">
-                <h3>Moje książki na wymianę (Półka ofert)</h3>
-                <div class="shelf-list" id="booksBody">
-                    </div>
-            </div>
+			<div class="shelf-container">
+				<div class="shelf-column">
+					<h3>Moje książki na wymianę (Półka ofert)</h3>
+					<div class="shelf-list" id="booksBody"></div>
+				</div>
 
-            <div class="shelf-column">
-                <h3 style="color: #4f46e5;">Książki, których szukam (Lista życzeń)</h3>
-                <div class="shelf-list" id="wishlistBody">
-                    </div>
-            </div>
-        </div>
-    </main>
+				<div class="shelf-column">
+					<h3 class="section-title-alt">
+						Książki, których szukam (Lista życzeń)
+					</h3>
+					<div class="shelf-list" id="wishlistBody"></div>
+				</div>
+			</div>
+		</main>
 
-    <div id="addBookModal" class="modal">
-        <div class="modal-content">
-            <span class="close" onclick="closeModal()">&times;</span>
-            <h3 style="margin-top: 0; color: #1e293b; margin-bottom: 20px;">Dodaj książkę</h3>
-            <form id="addBookForm" class="modal-form">
-                <select id="destination" required>
-                    <option value="shelf">Dodaj do: Półka ofert</option>
-                    <option value="wishlist">Dodaj do: Lista życzeń</option>
-                </select>
+		<div id="addBookModal" class="modal">
+			<div class="modal-content">
+				<span class="close" onclick="closeModal()">&times;</span>
+				<h3 class="section-title">Dodaj książkę</h3>
+				<form id="addBookForm" class="modal-form">
+					<select id="destination" required>
+						<option value="shelf">Dodaj do: Półka ofert</option>
+						<option value="wishlist">Dodaj do: Lista życzeń</option>
+					</select>
 
-                <input type="text" id="tytul" placeholder="Tytuł" required>
-                <input type="text" id="autor" placeholder="Autor" required>
-                
-                <select id="kategoria" required>
-                    <option value="" disabled selected>Kategoria</option>
-                    <option value="Fantastyka">Fantastyka</option>
-                    <option value="Thriller">Thriller</option>
-                    <option value="Romans">Romans</option>
-                    <option value="Sci-Fi">Sci-Fi</option>
-                    <option value="Horror">Horror</option>
-                    <option value="Inna">Inna</option>
-                </select>
-                
-                <select id="stan" required>
-                    <option value="" disabled selected>Stan</option>
-                    <option value="Nowa">Nowa</option>
-                    <option value="Idealny">Idealny</option>
-                    <option value="Bardzo dobry">Bardzo dobry</option>
-                    <option value="Dobry">Dobry</option>
-                    <option value="Dostateczny">Dostateczny</option>
-                </select>
-                
-                <input type="number" id="ilosc" placeholder="Ilość" min="1" value="1" required>
-                
-                <button type="submit" class="btn-success" style="width: 100%; margin-top: 10px;">Dodaj książkę</button>
-            </form>
-            <div id="addStatus"></div>
-        </div>
-    </div>
+					<input type="text" id="tytul" placeholder="Tytuł" required />
+					<input type="text" id="autor" placeholder="Autor" required />
 
-    <footer>
-        <div class="footer-col">
-            <h4>Instant Book Exchange</h4>
-            <p>Wymieniaj książki, oszczędzaj pieniądze i chroń środowisko.</p>
-        </div>
-        <div class="footer-col">
-            <h4>Przydatne linki</h4>
-            <a href="#">Jak to działa?</a>
-            <a href="#">Regulamin</a>
-            <a href="#">Polityka prywatności</a>
-        </div>
-        <div class="footer-col">
-            <h4>Kontakt</h4>
-            <a href="#">Facebook</a>
-            <a href="#">Instagram</a>
-            <a href="#">pomoc@bookexchange.pl</a>
-        </div>
-    </footer>
+					<select id="kategoria" required>
+						<option value="" disabled selected>Kategoria</option>
+						<option value="Fantastyka">Fantastyka</option>
+						<option value="Thriller">Thriller</option>
+						<option value="Romans">Romans</option>
+						<option value="Sci-Fi">Sci-Fi</option>
+						<option value="Horror">Horror</option>
+						<option value="Inna">Inna</option>
+					</select>
 
-    <script src="script.js"></script>
-</body>
+					<select id="stan" required>
+						<option value="" disabled selected>Stan</option>
+						<option value="Nowa">Nowa</option>
+						<option value="Idealny">Idealny</option>
+						<option value="Bardzo dobry">Bardzo dobry</option>
+						<option value="Dobry">Dobry</option>
+						<option value="Dostateczny">Dostateczny</option>
+					</select>
+
+					<input
+						type="number"
+						id="ilosc"
+						placeholder="Ilość"
+						min="1"
+						value="1"
+						required
+					/>
+
+					<button type="submit" class="btn-success w-100 mt-10">
+						Dodaj książkę
+					</button>
+				</form>
+				<div id="addStatus"></div>
+			</div>
+		</div>
+
+		<footer>
+			<div class="footer-col">
+				<h4>Instant Book Exchange</h4>
+				<p>Wymieniaj książki, oszczędzaj pieniądze i chroń środowisko.</p>
+			</div>
+			<div class="footer-col">
+				<h4>Przydatne linki</h4>
+				<a href="#">Jak to działa?</a>
+				<a href="#">Regulamin</a>
+				<a href="#">Polityka prywatności</a>
+			</div>
+			<div class="footer-col">
+				<h4>Kontakt</h4>
+				<a href="#">Facebook</a>
+				<a href="#">Instagram</a>
+				<a href="#">pomoc@bookexchange.pl</a>
+			</div>
+		</footer>
+
+		<script src="script.js"></script>
+	</body>
 </html>

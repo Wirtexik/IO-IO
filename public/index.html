@@ -1,93 +1,101 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="pl">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Instant Book Exchange - Strona Główna</title>
-    <link rel="stylesheet" href="style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-</head>
-<body>
-    <nav class="navbar">
-        <a href="index.html" class="nav-brand" style="text-decoration: none;">Instant Book Exchange</a>
-        <div class="nav-links">
-            <a href="index.html" class="active-link">Strona główna</a>
-            <a href="shelf.html">Moja półka</a>
-            <a href="#">Aukcje</a>
-            <a href="profil.html">Zaloguj się</a>
-        </div>
-    </nav>
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Instant Book Exchange - Strona Główna</title>
+		<link rel="stylesheet" href="style.css" />
+		<link
+			href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+			rel="stylesheet"
+		/>
+	</head>
+	<body>
+		<nav class="navbar">
+			<a href="index.html" class="nav-brand">Instant Book Exchange</a>
+			<div class="nav-links">
+				<a href="index.html" class="active-link">Strona główna</a>
+				<a href="shelf.html">Moja półka</a>
+				<a href="#">Aukcje</a>
+				<a href="profil.html">Zaloguj się</a>
+			</div>
+		</nav>
 
-    <main class="view-section">
-        <section class="hero">
-            <h1>Wymieniaj książki za darmo!</h1>
-            <p>Odkrywaj nowe tytuły, dziel się przeczytanymi i oszczędzaj</p>
-            <button class="btn-primary" onclick="window.location.href='shelf.html'">Zobacz oferty</button>
-        </section>
+		<main class="view-section">
+			<section class="hero">
+				<h1>Wymieniaj książki za darmo!</h1>
+				<p>Odkrywaj nowe tytuły, dziel się przeczytanymi i oszczędzaj</p>
+				<button
+					class="btn-primary"
+					onclick="window.location.href = 'shelf.html'"
+				>
+					Zobacz oferty
+				</button>
+			</section>
 
-        <section class="search-section">
-            <div class="search-bar">
-                <input type="text" placeholder="Szukaj po tytule lub po autorze...">
-                <select>
-                    <option>Wszystkie kategorie</option>
-                    <option>Fantastyka</option>
-                    <option>Kryminał</option>
-                    <option>Sci-Fi</option>
-                </select>
-                <button class="btn-dark">Szukaj</button>
-            </div>
-        </section>
+			<section class="search-section">
+				<div class="search-bar">
+					<input type="text" placeholder="Szukaj po tytule lub po autorze..." />
+					<select>
+						<option>Wszystkie kategorie</option>
+						<option>Fantastyka</option>
+						<option>Kryminał</option>
+						<option>Sci-Fi</option>
+					</select>
+					<button class="btn-dark">Szukaj</button>
+				</div>
+			</section>
 
-        <section class="offers-section">
-            <h2>Przykładowe oferty</h2>
-            <div class="cards-grid">
-                <div class="book-card">
-                    <div class="card-img">W</div>
-                    <div class="card-content">
-                        <h3>Wiedźmin: Ostatnie Życzenie</h3>
-                        <p>Andrzej Sapkowski</p>
-                        <button class="btn-outline">Zaproponuj wymianę</button>
-                    </div>
-                </div>
-                <div class="book-card">
-                    <div class="card-img">H</div>
-                    <div class="card-content">
-                        <h3>Hobbit</h3>
-                        <p>J.R.R. Tolkien</p>
-                        <button class="btn-outline">Zaproponuj wymianę</button>
-                    </div>
-                </div>
-                <div class="book-card">
-                    <div class="card-img">D</div>
-                    <div class="card-content">
-                        <h3>Diuna</h3>
-                        <p>Frank Herbert</p>
-                        <button class="btn-outline">Zaproponuj wymianę</button>
-                    </div>
-                </div>
-            </div>
-        </section>
-    </main>
+			<section class="offers-section">
+				<h2>Przykładowe oferty</h2>
+				<div class="cards-grid">
+					<div class="book-card">
+						<div class="card-img">W</div>
+						<div class="card-content">
+							<h3>Wiedźmin: Ostatnie Życzenie</h3>
+							<p>Andrzej Sapkowski</p>
+							<button class="btn-outline">Zaproponuj wymianę</button>
+						</div>
+					</div>
+					<div class="book-card">
+						<div class="card-img">H</div>
+						<div class="card-content">
+							<h3>Hobbit</h3>
+							<p>J.R.R. Tolkien</p>
+							<button class="btn-outline">Zaproponuj wymianę</button>
+						</div>
+					</div>
+					<div class="book-card">
+						<div class="card-img">D</div>
+						<div class="card-content">
+							<h3>Diuna</h3>
+							<p>Frank Herbert</p>
+							<button class="btn-outline">Zaproponuj wymianę</button>
+						</div>
+					</div>
+				</div>
+			</section>
+		</main>
 
-    <footer>
-        <div class="footer-col">
-            <h4>Instant Book Exchange</h4>
-            <p>Wymieniaj książki, oszczędzaj pieniądze i chroń środowisko.</p>
-        </div>
-        <div class="footer-col">
-            <h4>Przydatne linki</h4>
-            <a href="#">Jak to działa?</a>
-            <a href="#">Regulamin</a>
-            <a href="#">Polityka prywatności</a>
-        </div>
-        <div class="footer-col">
-            <h4>Kontakt</h4>
-            <a href="#">Facebook</a>
-            <a href="#">Instagram</a>
-            <a href="#">pomoc@bookexchange.pl</a>
-        </div>
-    </footer>
+		<footer>
+			<div class="footer-col">
+				<h4>Instant Book Exchange</h4>
+				<p>Wymieniaj książki, oszczędzaj pieniądze i chroń środowisko.</p>
+			</div>
+			<div class="footer-col">
+				<h4>Przydatne linki</h4>
+				<a href="#">Jak to działa?</a>
+				<a href="#">Regulamin</a>
+				<a href="#">Polityka prywatności</a>
+			</div>
+			<div class="footer-col">
+				<h4>Kontakt</h4>
+				<a href="#">Facebook</a>
+				<a href="#">Instagram</a>
+				<a href="#">pomoc@bookexchange.pl</a>
+			</div>
+		</footer>
 
-    <script src="script.js"></script>
-</body>
+		<script src="script.js"></script>
+	</body>
 </html>
