@@ -16,7 +16,7 @@
 			<div class="nav-links">
 				<a href="index.html" class="active-link">Strona główna</a>
 				<a href="shelf.html">Moja półka</a>
-				<a href="#">Aukcje</a>
+				<a href="aukcje.html">Aukcje</a>
 				<a href="profil.html">Zaloguj się</a>
 			</div>
 		</nav>
@@ -27,7 +27,7 @@
 				<p>Odkrywaj nowe tytuły, dziel się przeczytanymi i oszczędzaj</p>
 				<button
 					class="btn-primary"
-					onclick="window.location.href = 'shelf.html'"
+					onclick="window.location.href = 'aukcje.html'"
 				>
 					Zobacz oferty
 				</button>
@@ -48,51 +48,42 @@
 
 			<section class="offers-section">
 				<h2>Przykładowe oferty</h2>
-				<div class="cards-grid">
-					<div class="book-card">
-						<div class="card-img">W</div>
-						<div class="card-content">
-							<h3>Wiedźmin: Ostatnie Życzenie</h3>
-							<p>Andrzej Sapkowski</p>
-							<button class="btn-outline">Zaproponuj wymianę</button>
-						</div>
-					</div>
-					<div class="book-card">
-						<div class="card-img">H</div>
-						<div class="card-content">
-							<h3>Hobbit</h3>
-							<p>J.R.R. Tolkien</p>
-							<button class="btn-outline">Zaproponuj wymianę</button>
-						</div>
-					</div>
-					<div class="book-card">
-						<div class="card-img">D</div>
-						<div class="card-content">
-							<h3>Diuna</h3>
-							<p>Frank Herbert</p>
-							<button class="btn-outline">Zaproponuj wymianę</button>
-						</div>
-					</div>
+				<div class="cards-grid" id="randomBooksBody">
+					<p
+						style="
+							grid-column: 1 / -1;
+							text-align: center;
+							color: #64748b;
+							padding: 20px;
+						"
+					>
+						Ładowanie przykładowych ofert...
+					</p>
 				</div>
 			</section>
 		</main>
 
 		<footer>
-			<div class="footer-col">
-				<h4>Instant Book Exchange</h4>
-				<p>Wymieniaj książki, oszczędzaj pieniądze i chroń środowisko.</p>
+			<div class="footer-content">
+				<div class="footer-section">
+					<h4>Instant Book Exchange</h4>
+					<p>Wymieniaj książki, oszczędzaj pieniądze i chroń środowisko.</p>
+				</div>
+				<div class="footer-section">
+					<h4>Przydatne linki</h4>
+					<a href="#">Jak to działa?</a>
+					<a href="#">Regulamin</a>
+					<a href="#">Polityka prywatności</a>
+				</div>
+				<div class="footer-section">
+					<h4>Kontakt</h4>
+					<a href="#">Facebook</a>
+					<a href="#">Instagram</a>
+					<a href="#">pomoc@bookexchange.pl</a>
+				</div>
 			</div>
-			<div class="footer-col">
-				<h4>Przydatne linki</h4>
-				<a href="#">Jak to działa?</a>
-				<a href="#">Regulamin</a>
-				<a href="#">Polityka prywatności</a>
-			</div>
-			<div class="footer-col">
-				<h4>Kontakt</h4>
-				<a href="#">Facebook</a>
-				<a href="#">Instagram</a>
-				<a href="#">pomoc@bookexchange.pl</a>
+			<div class="footer-bottom">
+				<p>&copy; 2026 Instant Book Exchange. Wszelkie prawa zastrzeżone.</p>
 			</div>
 		</footer>
 

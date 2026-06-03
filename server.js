@@ -101,6 +101,61 @@ app.delete('/api/wishlist/:id', (req, res) => {
     });
 });
 
+/*
+ GET: POBIERANIE WSZYSTKICH KSIĄŻEK (AUKCJI) Z OPCJONALNYMI FILTRAMI
+ */
+
+app.get('/api/auctions', (req, res) => {
+    // Pobranie parametrów filtrowania przesłanych w adresie URL
+    const { search, category, condition } = req.query;
+    
+    // Bazowe zapytanie SQL - domyślnie wybieramy wszystkie rekordy
+    let query = "SELECT * FROM Ksiazki WHERE 1=1";
+    const params = [];
+
+    // Jeśli wpisano frazę, filtrujemy po tytule LUB autorze (częściowe dopasowanie LIKE)
+    if (search) {
+        query += " AND (tytul LIKE ? OR autor LIKE ?)";
+        params.push(`%${search}%`, `%${search}%`);
+    }
+
+    // Jeśli wybrano konkretną kategorię, zawężamy wyniki
+    if (category) {
+        query += " AND kategoria = ?";
+        params.push(category);
+    }
+
+    // Jeśli wybrano konkretny stan książki, zawężamy wyniki
+    if (condition) {
+        query += " AND stan = ?";
+        params.push(condition);
+    }
+
+    // Sortowanie wyników od najnowszych (najwyższe ID na początku)
+    query += " ORDER BY id DESC";
+
+    // Wykonanie zapytania w bazie danych
+    connection.query(query, params, (err, rows) => {
+        if (err) return res.status(500).json({ error: err.message });
+        // Zwrócenie znalezionych pozycji w formacie JSON
+        res.json({ books: rows });
+    });
+});
+
+
+/*
+ GET: POBIERANIE 3 LOSOWYCH KSIĄŻEK NA STRONĘ GŁÓWNĄ
+ */
+app.get('/api/random-books', (req, res) => {
+    // ORDER BY RAND() miesza wyniki, a LIMIT 3 ucina je tylko do trzech sztuk
+    const query = "SELECT * FROM Ksiazki ORDER BY RAND() LIMIT 3";
+    
+    connection.query(query, (err, rows) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json({ books: rows });
+    });
+});
+
 app.post('/api/register', (req, res) => {
     const { login, email, haslo } = req.body;
     const query = "INSERT INTO konta (login, email, haslo, typ_konta) VALUES (?, ?, ?, 'Użytkownik')";

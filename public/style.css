@@ -325,34 +325,62 @@ button {
 	text-align: center;
 }
 
-/* Footer */
+/*-----------------*/
+/* STOPKA (Footer) */
+/*-----------------*/
+
 footer {
-	background: var(--dark);
-	color: white;
-	padding: 50px;
-	display: flex;
-	justify-content: center;
-	gap: 80px;
-	margin-top: auto;
+	background-color: #1e293b; /* Główny, granatowy kolor tła */
+	color: #f8fafc;
+	margin-top: auto; /* Pcha stopkę na sam dół, jeśli strona jest krótka */
 }
-.footer-col h4 {
+
+/* Kontener na 3 kolumny */
+.footer-content {
+	max-width: 1200px;
+	margin: 0 auto;
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+	gap: 40px;
+	padding: 50px 20px 40px; /* Marginesy wewnętrzne */
+}
+
+/* Białe, pogrubione nagłówki */
+.footer-section h4 {
+	color: #ffffff;
 	margin-bottom: 15px;
-	font-size: 16px;
+	font-size: 18px;
 }
-.footer-col p {
+
+/* Szary tekst opisu */
+.footer-section p {
 	color: #94a3b8;
-	font-size: 14px;
-	max-width: 250px;
+	line-height: 1.6;
+	font-size: 15px;
 }
-.footer-col a {
+
+/* Szare linki */
+.footer-section a {
 	display: block;
 	color: #94a3b8;
 	text-decoration: none;
 	margin-bottom: 10px;
-	font-size: 14px;
+	transition: color 0.3s;
+	font-size: 15px;
 }
-.footer-col a:hover {
-	color: white;
+
+/* Efekt najechania myszką - link staje się biały */
+.footer-section a:hover {
+	color: #ffffff;
+}
+
+/* Ciemniejszy dolny pasek z prawami autorskimi */
+.footer-bottom {
+	background-color: #0f172a; /* Kolor tła ciemniejszy od reszty stopki */
+	text-align: center;
+	padding: 20px;
+	color: #64748b;
+	font-size: 14px;
 }
 
 /* ==========================================================================
@@ -852,3 +880,128 @@ Klasy pomocnicze dla zaloguj.html
 .modal-sm { width: 320px; text-align: center; }
 .text-success-lg { color: var(--success); font-size: 20px; margin-bottom: 15px; }
 .text-muted-mb { margin-bottom: 20px; color: var(--text-muted); font-size: 14px; }
+
+/*------------------------------*/
+/* STRONA AUKCJI STYLE          */
+/*------------------------------*/
+
+/* Główny kontener */
+.auctions-page {
+	display: flex;
+	gap: 30px;
+	width: 100%;
+	margin: 0 auto;
+	align-items: flex-start; /* Zapobiega sztucznemu rozciąganiu lewego panelu w dół */
+}
+
+/*Lewy panel z filtrami aukcje.html */
+.filters-sidebar {
+	width: 280px;
+	flex-shrink: 0;
+	background-color: white;
+	padding: 25px;
+	border-radius: 12px;
+	box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+	}
+
+.filters-sidebar h3 {
+	color: #1e293b;
+	margin-bottom: 20px;
+	font-size: 18px;
+	border-bottom: 1px solid #e2e8f0;
+	padding-bottom: 10px;
+}
+
+/* Elementy formularza filtrującego aukcje.html */
+.filtr-group {
+	margin-bottom: 15px;
+}
+
+.filter-group label {
+	display: block;
+	margin-bottom: 8px;
+	font-size: 14px;
+	font-weight: bold;
+	color: #1e293b;
+}
+.filter-group input,
+.filter-group select {
+	width: 100%;
+	padding: 10px 12px;
+	border: 1px solid #cbd5e1;
+	border-radius: 6px;
+	font-size: 14px;
+	outline: none;
+	transition: border-color 0.3s;
+	box-sizing: border-box;
+}
+
+.filter-group input:focus,
+.filter-group select:focus {
+	border-color: #4f46e5;
+}
+
+/* przycisk "zastosuj filtry" aukcje.html */
+.filter-btn {
+	width: 100%;
+	background-color: #1e293b;
+	color: white;
+	border: none;
+	padding: 12px;
+	border-radius: 6px;
+	font-weight: bold;
+	cursor: pointer;
+	transition: background-color 0.3s;
+	margin-top: 10px;
+}
+
+.filter-btn:hover {
+	background-color: #0f172a;
+}
+
+/* Prawa sekcja (Siatka z książkami) aukcje.html */
+.auctions-content {
+	flex: 1;
+}
+
+.auctions-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: flex-end;
+	margin-bottom: 25px;
+}
+
+.auctions-header h2 {
+	color: #1e293b;
+	font-size: 24px;
+}
+
+.auctions-header p {
+	color: #64748b;
+	font-size: 14px;
+}
+
+/* Modifikator dla informacji o stanie książki (wymiana inline styles z index.html) */
+.book-condition {
+	font-size: 12px;
+	color: #4f46e5;
+	margin-top: -10px;
+	margin-bottom: 15px;
+}
+
+/* Responsywność dla małych ekranów (np. tablety, telefony) */
+@media (max-width: 850px) {
+	.auctions-page {
+		flex-direction: column;
+	}
+
+	.filters-sidebar {
+		width: 100%;
+	}
+
+	.auctions-header {
+		flex-direction: column;
+		align-items: flex-start;
+		gap: 10px;
+	}
+}

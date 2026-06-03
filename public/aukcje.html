@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="pl">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Aukcje - Instant Book Exchange</title>
+		<link rel="stylesheet" href="style.css" />
+		<link
+			rel="stylesheet"
+			href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+		/>
+	</head>
+	<body>
+		<nav class="navbar">
+			<a href="index.html" class="nav-brand">Instant Book Exchange</a>
+			<div class="nav-links">
+				<a href="index.html" class="active-link">Strona główna</a>
+				<a href="shelf.html">Moja półka</a>
+				<a href="aukcje.html">Aukcje</a>
+				<a href="profil.html">Zaloguj się</a>
+			</div>
+		</nav>
+		<main class="auctions-page view-section">
+			<aside class="filters-sidebar">
+				<h3>Filtruj oferty</h3>
+				<div class="filter-group">
+					<label for="serach-title">Szukaj tytułu/autora</label>
+					<input type="text" id="serach-title" placeholder="np. Diuna" />
+				</div>
+				<div class="filter-group">
+					<label for="filter-category">Kategoria</label>
+					<select id="filter-category">
+						<option value="">Wszystkie kategorie</option>
+						<option value="Fantastyka">Fantastyka</option>
+						<option value="Thriller">Thriller</option>
+						<option value="Romans">Romans</option>
+						<option value="Sci-Fi">Sci-Fi</option>
+						<option value="Horror">Horror</option>
+						<option value="Dziecięca">Dziecięca</option>
+						<option value="Biografia">Biografia</option>
+						<option value="Reportaż">Reportaż</option>
+						<option value="Historyczna">Historyczna</option>
+						<option value="Przygodowa">Przygodowa</option>
+						<option value="Młodzieżowa">Młodzieżowa</option>
+						<option value="Powieść">Powieść</option>
+						<option value="Dramat">Dramat</option>
+						<option value="Epopeja">Epopeja</option>
+						<option value="Wiersz">Wiersz</option>
+						<option value="Epika">Epika</option>
+						<option value="Inna">Inna</option>
+					</select>
+				</div>
+				<div class="filter-group">
+					<label for="filter-condition">Stan książki</label>
+					<select id="filter-condition">
+						<option value="">Dowolny stan</option>
+						<option value="Nowa">Nowa</option>
+						<option value="Idealny">Idealny</option>
+						<option value="Bardzo dobry">Bardzo dobry</option>
+						<option value="Dobry">Dobry</option>
+						<option value="Dostateczny">Dostateczny</option>
+					</select>
+				</div>
+				<button id="apply-filters-btn" class="filter-btn">
+					Zastosuj filtry
+				</button>
+			</aside>
+			<section class="auctions-content">
+				<div class="auctions-header">
+					<h2>Dostępne książki na wymianę</h2>
+					<p>Znaleziono: <strong id="results-count">0</strong> ofert</p>
+				</div>
+				<div class="cards-grid" id="auctionsBody">
+					<div
+						style="grid-column: 1 / -1; text-align: center; padding: 50px 20px"
+					>
+						<h3 style="color: #4f46e5; margin-bottom: 10px">
+							Znajdź to, czego szukasz
+						</h3>
+						<p style="color: #64748b">
+							Użyj filtrów po lewej stronie i kliknij "Zastosuj", aby wyświetlić
+							pozycje dodane przez innych użytkowników.
+						</p>
+					</div>
+				</div>
+			</section>
+		</main>
+		<footer>
+			<div class="footer-content">
+				<div class="footer-section">
+					<h4>Instant Book Exchange</h4>
+					<p>Wymieniaj książki, oszczędzaj pieniądze i chroń środowisko.</p>
+				</div>
+				<div class="footer-section">
+					<h4>Przydatne linki</h4>
+					<a href="#">Jak to działa?</a>
+					<a href="#">Regulamin</a>
+					<a href="#">Polityka prywatności</a>
+				</div>
+				<div class="footer-section">
+					<h4>Kontakt</h4>
+					<a href="#">Facebook</a>
+					<a href="#">Instagram</a>
+					<a href="#">pomoc@bookexchange.pl</a>
+				</div>
+			</div>
+			<div class="footer-bottom">
+				<p>&copy; 2026 Instant Book Exchange. Wszelkie prawa zastrzeżone.</p>
+			</div>
+		</footer>
+
+		<script src="script.js"></script>
+	</body>
+</html>
