@@ -26,7 +26,6 @@ body {
 	min-height: 100vh;
 }
 
-/* Navbar */
 .navbar {
 	display: flex;
 	justify-content: space-between;
@@ -58,14 +57,12 @@ body {
 	color: var(--primary);
 }
 
-/* Kontener główny dla podstron */
 .view-section {
 	flex: 1;
 	padding: 40px 20px;
 	width: 100%;
 }
 
-/* Hero Section */
 .hero {
 	text-align: center;
 	padding: 60px 20px 40px;
@@ -81,7 +78,6 @@ body {
 	margin-bottom: 30px;
 }
 
-/* Buttons */
 button {
 	cursor: pointer;
 	border-radius: 6px;
@@ -133,7 +129,6 @@ button {
 	background: #fef2f2;
 }
 
-/* Search Bar */
 .search-section {
 	display: flex;
 	justify-content: center;
@@ -164,7 +159,6 @@ button {
 	color: var(--text-main);
 }
 
-/* Offers Grid */
 .offers-section {
 	text-align: center;
 	max-width: 1000px;
@@ -211,7 +205,6 @@ button {
 	margin-bottom: 20px;
 }
 
-/* Shelf Layout */
 .shelf-header {
 	display: flex;
 	justify-content: space-between;
@@ -277,7 +270,6 @@ button {
 	font-size: 13px;
 }
 
-/* Modal */
 .modal {
 	display: none;
 	position: fixed;
@@ -325,41 +317,33 @@ button {
 	text-align: center;
 }
 
-/*-----------------*/
-/* STOPKA (Footer) */
-/*-----------------*/
-
 footer {
-	background-color: #1e293b; /* Główny, granatowy kolor tła */
+	background-color: #1e293b;
 	color: #f8fafc;
-	margin-top: auto; /* Pcha stopkę na sam dół, jeśli strona jest krótka */
+	margin-top: auto; 
 }
 
-/* Kontener na 3 kolumny */
 .footer-content {
 	max-width: 1200px;
 	margin: 0 auto;
 	display: grid;
 	grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
 	gap: 40px;
-	padding: 50px 20px 40px; /* Marginesy wewnętrzne */
+	padding: 50px 20px 40px; 
 }
 
-/* Białe, pogrubione nagłówki */
 .footer-section h4 {
 	color: #ffffff;
 	margin-bottom: 15px;
 	font-size: 18px;
 }
 
-/* Szary tekst opisu */
 .footer-section p {
 	color: #94a3b8;
 	line-height: 1.6;
 	font-size: 15px;
 }
 
-/* Szare linki */
 .footer-section a {
 	display: block;
 	color: #94a3b8;
@@ -369,23 +353,18 @@ footer {
 	font-size: 15px;
 }
 
-/* Efekt najechania myszką - link staje się biały */
 .footer-section a:hover {
 	color: #ffffff;
 }
 
-/* Ciemniejszy dolny pasek z prawami autorskimi */
 .footer-bottom {
-	background-color: #0f172a; /* Kolor tła ciemniejszy od reszty stopki */
+	background-color: #0f172a; 
 	text-align: center;
 	padding: 20px;
 	color: #64748b;
 	font-size: 14px;
 }
 
-/* ==========================================================================
-   STYLE DEDYKOWANE DLA PANELU LOGOWANIA I REJESTRACJI (ZALOGUJ.HTML)
-   ========================================================================== */
 .auth-container {
 	display: flex;
 	justify-content: center;
@@ -489,12 +468,6 @@ footer {
 	accent-color: var(--primary);
 }
 
-/* ==========================================================================
-   STYLE DLA PANELU UŻYTKOWNIKA (PROFIL.HTML)
-   Całkowicie odseparowane od plików HTML.
-   ========================================================================== */
-
-/* Klasa nawigacji */
 .nav-brand {
 	font-size: 20px;
 	font-weight: 700;
@@ -503,14 +476,12 @@ footer {
 	text-decoration: none;
 }
 
-/* Układ kontenera profilu */
 .profile-container {
 	max-width: 1200px;
 	margin: 0 auto;
 	padding: 40px 20px;
 }
 
-/* Nagłówek sekcji profilu  */
 .profile-header {
 	display: flex;
 	justify-content: space-between;
@@ -530,7 +501,6 @@ footer {
 	gap: 10px;
 }
 
-/* Główna karta profilowa */
 .profile-card {
 	background: white;
 	border-radius: 12px;
@@ -540,7 +510,6 @@ footer {
 	margin-bottom: 30px;
 }
 
-/* Informacje wewnątrz karty */
 .profile-info {
 	display: grid;
 	grid-template-columns: 1fr 2fr;
@@ -548,7 +517,6 @@ footer {
 	align-items: start;
 }
 
-/* Generator awatara z gradientem */
 .profile-avatar {
 	width: 150px;
 	height: 150px;
@@ -576,7 +544,6 @@ footer {
 	gap: 10px;
 }
 
-/* Odznaki statusu (Badge) */
 .badge {
 	display: inline-block;
 	background: #e0f2fe;
@@ -592,7 +559,6 @@ footer {
 	color: #166534;
 }
 
-/* Siatka statystyk liczbowych */
 .stats-grid {
 	display: grid;
 	grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
@@ -620,7 +586,6 @@ footer {
 	margin: 0;
 }
 
-/* Nawigacja zakładkami (Tabs Navigation) */
 .profile-tabs {
 	display: flex;
 	gap: 10px;
@@ -650,7 +615,6 @@ footer {
 	color: var(--primary);
 }
 
-/* Kontenery zawartości zakładek */
 .tab-content {
 	display: none;
 }
@@ -659,7 +623,6 @@ footer {
 	display: block;
 }
 
-/* Lista książek użytkownika */
 .books-list {
 	display: grid;
 	gap: 15px;
@@ -700,7 +663,6 @@ footer {
 	flex-wrap: wrap;
 }
 
-/* Odznaki dostępności ofert */
 .status-badge {
 	background: #e0f2fe;
 	color: #0369a1;
@@ -715,7 +677,6 @@ footer {
 	color: #166534;
 }
 
-/* Elementy formularza ustawień profilu */
 .settings-form {
 	display: flex;
 	flex-direction: column;
@@ -779,7 +740,6 @@ footer {
 	margin-top: 20px;
 }
 
-/* Stan pustej listy (Empty State) */
 .empty-state {
 	text-align: center;
 	padding: 60px 20px;
@@ -797,9 +757,6 @@ footer {
 	margin-bottom: 10px;
 }
 
-/* ===================================
-   KLASY POMOCNICZE (UTILITY CLASSES) 
-   =================================== */
 .btn-logout-width {
 	width: auto;
 }
@@ -843,7 +800,6 @@ footer {
 	padding: 10px;
 }
 
-/* RWD - Dostosowanie do urządzeń mobilnych */
 @media (max-width: 768px) {
 	.profile-info {
 		grid-template-columns: 1fr;
@@ -871,9 +827,6 @@ footer {
 	}
 }
 
-/*===============================
-Klasy pomocnicze dla zaloguj.html 
-=================================*/
 .p-12 { padding: 12px !important; }
 .mt-10 { margin-top: 10px !important; }
 .error-msg { color: #dc2626; font-size: 14px; margin-top: 5px; display: none; }
@@ -881,20 +834,15 @@ Klasy pomocnicze dla zaloguj.html
 .text-success-lg { color: var(--success); font-size: 20px; margin-bottom: 15px; }
 .text-muted-mb { margin-bottom: 20px; color: var(--text-muted); font-size: 14px; }
 
-/*------------------------------*/
-/* STRONA AUKCJI STYLE          */
-/*------------------------------*/
-
-/* Główny kontener */
 .auctions-page {
 	display: flex;
 	gap: 30px;
 	width: 100%;
 	margin: 0 auto;
-	align-items: flex-start; /* Zapobiega sztucznemu rozciąganiu lewego panelu w dół */
+	align-items: flex-start; 
 }
 
-/*Lewy panel z filtrami aukcje.html */
+
 .filters-sidebar {
 	width: 280px;
 	flex-shrink: 0;
@@ -912,7 +860,6 @@ Klasy pomocnicze dla zaloguj.html
 	padding-bottom: 10px;
 }
 
-/* Elementy formularza filtrującego aukcje.html */
 .filtr-group {
 	margin-bottom: 15px;
 }
@@ -941,7 +888,6 @@ Klasy pomocnicze dla zaloguj.html
 	border-color: #4f46e5;
 }
 
-/* przycisk "zastosuj filtry" aukcje.html */
 .filter-btn {
 	width: 100%;
 	background-color: #1e293b;
@@ -959,7 +905,6 @@ Klasy pomocnicze dla zaloguj.html
 	background-color: #0f172a;
 }
 
-/* Prawa sekcja (Siatka z książkami) aukcje.html */
 .auctions-content {
 	flex: 1;
 }
@@ -981,7 +926,6 @@ Klasy pomocnicze dla zaloguj.html
 	font-size: 14px;
 }
 
-/* Modifikator dla informacji o stanie książki (wymiana inline styles z index.html) */
 .book-condition {
 	font-size: 12px;
 	color: #4f46e5;
@@ -989,7 +933,6 @@ Klasy pomocnicze dla zaloguj.html
 	margin-bottom: 15px;
 }
 
-/* Responsywność dla małych ekranów (np. tablety, telefony) */
 @media (max-width: 850px) {
 	.auctions-page {
 		flex-direction: column;

@@ -41,12 +41,12 @@
 
 						<div class="profile-details">
 							<h2 id="userName">Nazwa Użytkownika</h2>
-							<p><span>📍</span> Warszawa, Polska</p>
+							<p id="displayLocation"><span>📍</span> Nie podano lokalizacji</p>
 							<p>
 								<span>📧</span>
 								<span id="profileEmail">brak.emailu@email.com</span>
 							</p>
-							<p><span>📱</span> +48 123 456 789</p>
+							<p id="displayPhone"><span>📱</span> Brak numeru telefonu</p>
 							<p><span class="badge verified">✓ Zweryfikowany</span></p>
 
 							<div class="stats-grid">
@@ -83,7 +83,7 @@
 							</h3>
 							<button
 								class="btn-primary btn-add-book-spec"
-								onclick="openModal()"
+								onclick="openModal('shelf')"
 							>
 								+ Dodaj książkę
 							</button>
@@ -94,9 +94,17 @@
 
 				<div id="tab-wishlist" class="tab-content">
 					<div class="profile-card">
-						<h3 class="profile-tab-title">
-							Moja lista życzeń (<span id="wishlistCount">0</span>)
-						</h3>
+						<div class="profile-tab-header">
+							<h3 class="profile-tab-title">
+								Moja lista życzeń (<span id="wishlistCount">0</span>)
+							</h3>
+							<button
+								class="btn-primary btn-add-book-spec"
+								onclick="openModal('wishlist')"
+							>
+								+ Dodaj do życzeń
+							</button>
+						</div>
 						<div class="books-list" id="wishlistBody"></div>
 					</div>
 				</div>
@@ -109,13 +117,13 @@
 							<div class="form-row">
 								<div class="form-group">
 									<label>Imię</label>
-									<input type="text" value="Jan" placeholder="Twoje imię" />
+									<input type="text" id="set-imie" placeholder="Twoje imię" />
 								</div>
 								<div class="form-group">
 									<label>Nazwisko</label>
 									<input
 										type="text"
-										value="Kowalski"
+										id="set-nazwisko"
 										placeholder="Twoje nazwisko"
 									/>
 								</div>
@@ -125,7 +133,7 @@
 								<label>Numer telefonu</label>
 								<input
 									type="tel"
-									value="+48 123 456 789"
+									id="set-telefon"
 									placeholder="Twój numer telefonu"
 								/>
 							</div>
@@ -133,13 +141,13 @@
 							<div class="form-row">
 								<div class="form-group">
 									<label>Miasto</label>
-									<input type="text" value="Warszawa" placeholder="Miasto" />
+									<input type="text" id="set-miasto" placeholder="Miasto" />
 								</div>
 								<div class="form-group">
 									<label>Kod pocztowy</label>
 									<input
 										type="text"
-										value="00-001"
+										id="set-kod"
 										placeholder="Kod pocztowy"
 									/>
 								</div>
@@ -147,9 +155,7 @@
 
 							<div class="form-group">
 								<label>O mnie</label>
-								<textarea placeholder="Napisz coś o sobie...">
-Pasjonuję się czytaniem fantasy i science fiction. Chętnie wymieniam książki w dobrym stanie.</textarea
-								>
+								<textarea id="set-opis" placeholder="Napisz coś o sobie..."></textarea>
 							</div>
 
 							<div class="form-buttons">
@@ -167,14 +173,14 @@ Pasjonuję się czytaniem fantasy i science fiction. Chętnie wymieniam książk
 								<button
 									type="button"
 									class="btn-outline btn-sec-action"
-									onclick="alert('Funkcja zmiany hasła w budowie!')"
+									onclick="openPasswordModal()"
 								>
 									🔐 Zmień hasło
 								</button>
 								<button
 									type="button"
 									class="btn-danger-outline btn-sec-action"
-									onclick="alert('Funkcja usuwania konta w budowie!')"
+									onclick="deleteAccount()"
 								>
 									⚠️ Usuń konto
 								</button>
@@ -188,8 +194,10 @@ Pasjonuję się czytaniem fantasy i science fiction. Chętnie wymieniam książk
 				<div class="modal-content">
 					<span class="close" onclick="closeModal()">&times;</span>
 					<h3 class="profile-tab-title">Dodaj nową książkę</h3>
-					<form id="addBookForm" class="modal-form">
+					<form id="addBookForm" class="modal-form" style="margin-top: 15px;">
+						
 						<input type="hidden" id="destination" value="shelf" />
+						
 						<input
 							type="text"
 							id="tytul"
@@ -223,7 +231,38 @@ Pasjonuję się czytaniem fantasy i science fiction. Chętnie wymieniam książk
 						<button type="submit" class="btn-primary w-100">
 							Dodaj książkę
 						</button>
-						<div id="addStatus"></div>
+						<div id="addStatus" style="text-align: center; margin-top: 10px;"></div>
+					</form>
+				</div>
+			</div>
+
+			<div id="changePasswordModal" class="modal">
+				<div class="modal-content">
+					<span class="close" onclick="closePasswordModal()">&times;</span>
+					<h3 class="profile-tab-title">Zmień hasło</h3>
+					<form id="changePasswordForm" class="modal-form" style="margin-top: 15px;">
+						<input
+							type="password"
+							id="old-password"
+							placeholder="Aktualne hasło"
+							required
+						/>
+						<input
+							type="password"
+							id="new-password"
+							placeholder="Nowe hasło"
+							required
+						/>
+						<input
+							type="password"
+							id="new-password-confirm"
+							placeholder="Powtórz nowe hasło"
+							required
+						/>
+						<button type="submit" class="btn-primary w-100 mt-10">
+							Zmień hasło
+						</button>
+						<div id="passwordStatus" class="error-msg" style="display: block; text-align: center; margin-top: 10px;"></div>
 					</form>
 				</div>
 			</div>

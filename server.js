@@ -101,53 +101,36 @@ app.delete('/api/wishlist/:id', (req, res) => {
     });
 });
 
-/*
- GET: POBIERANIE WSZYSTKICH KSIĄŻEK (AUKCJI) Z OPCJONALNYMI FILTRAMI
- */
-
 app.get('/api/auctions', (req, res) => {
-    // Pobranie parametrów filtrowania przesłanych w adresie URL
     const { search, category, condition } = req.query;
     
-    // Bazowe zapytanie SQL - domyślnie wybieramy wszystkie rekordy
     let query = "SELECT * FROM Ksiazki WHERE 1=1";
     const params = [];
 
-    // Jeśli wpisano frazę, filtrujemy po tytule LUB autorze (częściowe dopasowanie LIKE)
     if (search) {
         query += " AND (tytul LIKE ? OR autor LIKE ?)";
         params.push(`%${search}%`, `%${search}%`);
     }
 
-    // Jeśli wybrano konkretną kategorię, zawężamy wyniki
     if (category) {
         query += " AND kategoria = ?";
         params.push(category);
     }
 
-    // Jeśli wybrano konkretny stan książki, zawężamy wyniki
     if (condition) {
         query += " AND stan = ?";
         params.push(condition);
     }
 
-    // Sortowanie wyników od najnowszych (najwyższe ID na początku)
     query += " ORDER BY id DESC";
 
-    // Wykonanie zapytania w bazie danych
     connection.query(query, params, (err, rows) => {
         if (err) return res.status(500).json({ error: err.message });
-        // Zwrócenie znalezionych pozycji w formacie JSON
         res.json({ books: rows });
     });
 });
 
-
-/*
- GET: POBIERANIE 3 LOSOWYCH KSIĄŻEK NA STRONĘ GŁÓWNĄ
- */
 app.get('/api/random-books', (req, res) => {
-    // ORDER BY RAND() miesza wyniki, a LIMIT 3 ucina je tylko do trzech sztuk
     const query = "SELECT * FROM Ksiazki ORDER BY RAND() LIMIT 3";
     
     connection.query(query, (err, rows) => {
@@ -184,6 +167,71 @@ app.post('/api/login', (req, res) => {
         }
         
         res.json({ success: true, login: rows[0].login });
+    });
+});
+
+app.get('/api/profile', (req, res) => {
+    const login = req.query.user;
+    
+    const query = "SELECT email, imie, nazwisko, telefon, miasto, kod_pocztowy, opis FROM konta WHERE login = ?";
+    connection.query(query, [login], (err, rows) => {
+        if (err) return res.status(500).json({ error: err.message });
+        if (rows.length === 0) return res.status(404).json({ error: 'Użytkownik nie znaleziony' });
+        
+        res.json(rows[0]);
+    });
+});
+
+app.put('/api/profile', (req, res) => {
+    const { login, imie, nazwisko, telefon, miasto, kod_pocztowy, opis } = req.body;
+    
+    const query = `
+        UPDATE konta 
+        SET imie = ?, nazwisko = ?, telefon = ?, miasto = ?, kod_pocztowy = ?, opis = ? 
+        WHERE login = ?
+    `;
+    
+    connection.query(query, [imie, nazwisko, telefon, miasto, kod_pocztowy, opis, login], (err, result) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json({ message: "Dane profilu zostały zaktualizowane!" });
+    });
+});
+
+app.put('/api/change-password', (req, res) => {
+    const { login, stareHaslo, noweHaslo } = req.body;
+
+    connection.query("SELECT haslo FROM konta WHERE login = ?", [login], (err, rows) => {
+        if (err) return res.status(500).json({ error: err.message });
+        if (rows.length === 0) return res.status(404).json({ error: 'Użytkownik nie znaleziony.' });
+
+        if (rows[0].haslo !== stareHaslo) {
+            return res.status(400).json({ error: 'Aktualne hasło jest nieprawidłowe!' });
+        }
+
+        connection.query("UPDATE konta SET haslo = ? WHERE login = ?", [noweHaslo, login], (err, result) => {
+            if (err) return res.status(500).json({ error: err.message });
+            res.json({ message: "Hasło zostało pomyślnie zmienione!" });
+        });
+    });
+});
+
+app.delete('/api/delete-account/:user', (req, res) => {
+    const login = req.params.user;
+
+    // Najpierw usuwamy książki z półki
+    connection.query("DELETE FROM Ksiazki WHERE wlasciciel = ?", [login], (err) => {
+        if (err) return res.status(500).json({ error: err.message });
+
+        // Następnie z wishlisty
+        connection.query("DELETE FROM wishlist WHERE wlasciciel = ?", [login], (err) => {
+            if (err) return res.status(500).json({ error: err.message });
+
+            // Na końcu usuwamy samo konto
+            connection.query("DELETE FROM konta WHERE login = ?", [login], (err) => {
+                if (err) return res.status(500).json({ error: err.message });
+                res.json({ message: "Konto zostało pomyślnie usunięte." });
+            });
+        });
     });
 });
 

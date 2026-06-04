@@ -1,9 +1,3 @@
-/*
- * ==========================================================================
- * INSTANT BOOK EXCHANGE - GLÓWNY PLIK LOGIKI JAVASCRIPT
- * ==========================================================================
- */
-
 document.addEventListener('DOMContentLoaded', () => {
 	if (document.getElementById('booksBody')) {
 		fetchBooks();
@@ -12,21 +6,20 @@ document.addEventListener('DOMContentLoaded', () => {
 		fetchWishlist();
 	}
 
-	// NOWE: Obsługa losowych książek na stronie głównej
+	// Obsługa losowych książek na stronie głównej
 	if (document.getElementById('randomBooksBody')) {
 		fetchRandomBooks();
 	}
 
-	// NOWE: Obsługa inicjalizacji strony z aukcjami
+	// Obsługa inicjalizacji strony z aukcjami
 	if (document.getElementById('auctionsBody')) {
-		// Podpięcie funkcji filtrującej WYŁĄCZNIE pod kliknięcie przycisku
 		const filterBtn = document.getElementById('apply-filters-btn');
 		if (filterBtn) {
 			filterBtn.addEventListener('click', fetchAuctions);
 		}
 	}
 
-	// Obsługa ukrywania/pokazywania pola "ilość" w oknie dodawania książki
+	// Obsługa ukrywania/pokazywania pola "ilość" w oknie dodawania książki (Dla shelf.html)
 	const destSelect = document.getElementById('destination');
 	const iloscInput = document.getElementById('ilosc');
 	if (destSelect && iloscInput) {
@@ -44,16 +37,14 @@ document.addEventListener('DOMContentLoaded', () => {
 	setupNavbarAuth();
 });
 
-/*
- ZARZĄDZANIE SESJĄ W NAWIGACJI
- */
+
 function setupNavbarAuth() {
 	const loggedInUser = localStorage.getItem('loggedInUser');
 	const navLinks = document.querySelectorAll('.nav-links a');
 	let loginLink = null;
 
 	navLinks.forEach((link) => {
-		if (link.getAttribute('href') === 'profil.html') {
+		if (link.getAttribute('href') === 'profil.html' || link.getAttribute('href') === 'zaloguj.html') {
 			loginLink = link;
 		}
 	});
@@ -65,9 +56,6 @@ function setupNavbarAuth() {
 	}
 }
 
-/*
- PRZEŁĄCZANIE ZAKŁADEK W PROFILU UŻYTKOWNIKA
- */
 function switchTab(tabName, event) {
 	const tabs = document.querySelectorAll('.tab-content');
 	tabs.forEach((tab) => tab.classList.remove('active'));
@@ -81,9 +69,7 @@ function switchTab(tabName, event) {
 	}
 }
 
-/*
-WYLOGOWYWANIE Z APLIKACJI
- */
+
 function logout() {
 	localStorage.removeItem('loggedInUser');
 	localStorage.removeItem('loggedInUserEmail');
@@ -91,19 +77,106 @@ function logout() {
 	window.location.href = 'zaloguj.html';
 }
 
-function saveSettings() {
-	alert('Zmiany zostały zapisane lokalnie!');
+
+function loadProfileData() {
+	const loggedInUser = localStorage.getItem('loggedInUser');
+	if (!loggedInUser) return;
+
+	fetch(`/api/profile?user=${loggedInUser}`)
+		.then((res) => res.json())
+		.then((data) => {
+			if (data.error) return;
+
+			// 1. Aktualizacja górnej wizytówki profilu
+			const locationEl = document.getElementById('displayLocation');
+			const phoneEl = document.getElementById('displayPhone');
+			const emailEl = document.getElementById('profileEmail');
+
+			if (emailEl) emailEl.textContent = data.email || 'Brak e-maila';
+			if (locationEl) {
+				if (data.miasto || data.kod_pocztowy) {
+					locationEl.innerHTML = `<span>📍</span> ${(data.miasto || '')} ${(data.kod_pocztowy || '')}`.trim();
+				} else {
+					locationEl.innerHTML = `<span>📍</span> Nie podano lokalizacji`;
+				}
+			}
+			if (phoneEl) {
+				phoneEl.innerHTML = `<span>📱</span> ${data.telefon || 'Brak numeru telefonu'}`;
+			}
+
+			// 2. Wypełnienie formularza w Ustawieniach
+			if (document.getElementById('set-imie')) document.getElementById('set-imie').value = data.imie || '';
+			if (document.getElementById('set-nazwisko')) document.getElementById('set-nazwisko').value = data.nazwisko || '';
+			if (document.getElementById('set-telefon')) document.getElementById('set-telefon').value = data.telefon || '';
+			if (document.getElementById('set-miasto')) document.getElementById('set-miasto').value = data.miasto || '';
+			if (document.getElementById('set-kod')) document.getElementById('set-kod').value = data.kod_pocztowy || '';
+			if (document.getElementById('set-opis')) document.getElementById('set-opis').value = data.opis || '';
+		})
+		.catch((err) => console.error('Błąd ładowania profilu:', err));
 }
 
-/*
-OBSŁUGA OKIEN WYSKAKUJĄCYCH (MODALI)
- */
-function openModal() {
+
+function saveSettings() {
+	const loggedInUser = localStorage.getItem('loggedInUser');
+	if (!loggedInUser) {
+		alert('Musisz być zalogowany!');
+		return;
+	}
+
+	const profileData = {
+		login: loggedInUser,
+		imie: document.getElementById('set-imie').value,
+		nazwisko: document.getElementById('set-nazwisko').value,
+		telefon: document.getElementById('set-telefon').value,
+		miasto: document.getElementById('set-miasto').value,
+		kod_pocztowy: document.getElementById('set-kod').value,
+		opis: document.getElementById('set-opis').value,
+	};
+
+	fetch('/api/profile', {
+		method: 'PUT',
+		headers: { 'Content-Type': 'application/json' },
+		body: JSON.stringify(profileData),
+	})
+		.then((res) => res.json())
+		.then((data) => {
+			if (data.error) {
+				alert('❌ Błąd zapisu: ' + data.error);
+			} else {
+				alert('✅ ' + data.message);
+				loadProfileData(); // Odświeżenie pól wizytówki nowymi danymi
+			}
+		})
+		.catch((err) => console.error('Błąd zapisywania profilu:', err));
+}
+
+
+function openModal(targetDestination) {
 	const modal = document.getElementById('addBookModal');
 	if (modal) {
 		modal.style.display = 'block';
 		const statusDiv = document.getElementById('addStatus');
 		if (statusDiv) statusDiv.textContent = '';
+
+		// ZMIANA: Obsługa ukrytego pola destination i ilości na podstawie przekazanego parametru
+		if (targetDestination) {
+			const destInput = document.getElementById('destination');
+			const iloscInput = document.getElementById('ilosc');
+
+			if (destInput) {
+				destInput.value = targetDestination;
+			}
+
+			if (iloscInput) {
+				if (targetDestination === 'wishlist') {
+					iloscInput.style.display = 'none';
+					iloscInput.removeAttribute('required');
+				} else {
+					iloscInput.style.display = 'block';
+					iloscInput.setAttribute('required', 'required');
+				}
+			}
+		}
 	}
 }
 
@@ -112,9 +185,24 @@ function closeModal() {
 	if (modal) modal.style.display = 'none';
 }
 
+function openPasswordModal() {
+	const modal = document.getElementById('changePasswordModal');
+	if (modal) {
+		modal.style.display = 'block';
+		const statusDiv = document.getElementById('passwordStatus');
+		if (statusDiv) statusDiv.textContent = '';
+	}
+}
+
+function closePasswordModal() {
+	const modal = document.getElementById('changePasswordModal');
+	if (modal) modal.style.display = 'none';
+}
+
 window.onclick = function (event) {
 	let addBookModal = document.getElementById('addBookModal');
 	let registerModal = document.getElementById('registerSuccessModal');
+	let passwordModal = document.getElementById('changePasswordModal');
 
 	if (event.target == addBookModal) {
 		addBookModal.style.display = 'none';
@@ -122,11 +210,12 @@ window.onclick = function (event) {
 	if (event.target == registerModal) {
 		closeRegisterSuccessModal();
 	}
+	if (event.target == passwordModal) {
+		closePasswordModal();
+	}
 };
 
-/*
- POST: DODAWANIE NOWEJ KSIĄŻKI DO BAZY DANYCH
- */
+
 const addBookForm = document.getElementById('addBookForm');
 if (addBookForm) {
 	addBookForm.addEventListener('submit', function (e) {
@@ -145,9 +234,7 @@ if (addBookForm) {
 			autor: document.getElementById('autor').value,
 			kategoria: document.getElementById('kategoria').value,
 			stan: document.getElementById('stan').value,
-			ilosc: document.getElementById('ilosc')
-				? document.getElementById('ilosc').value
-				: 1,
+			ilosc: document.getElementById('ilosc') ? document.getElementById('ilosc').value : 1,
 			wlasciciel: loggedInUser,
 		};
 
@@ -182,24 +269,88 @@ if (addBookForm) {
 	});
 }
 
-/*
- GET: POBIERANIE OFEROWANYCH KSIĄŻEK Z BAZY
- */
+
+const changePasswordForm = document.getElementById('changePasswordForm');
+if (changePasswordForm) {
+	changePasswordForm.addEventListener('submit', function (e) {
+		e.preventDefault();
+
+		const loggedInUser = localStorage.getItem('loggedInUser');
+		if (!loggedInUser) return;
+
+		const oldPassword = document.getElementById('old-password').value;
+		const newPassword = document.getElementById('new-password').value;
+		const newPasswordConfirm = document.getElementById('new-password-confirm').value;
+		const statusDiv = document.getElementById('passwordStatus');
+
+		if (newPassword !== newPasswordConfirm) {
+			statusDiv.textContent = '❌ Nowe hasła nie są identyczne!';
+			statusDiv.style.color = '#dc2626';
+			return;
+		}
+
+		fetch('/api/change-password', {
+			method: 'PUT',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({
+				login: loggedInUser,
+				stareHaslo: oldPassword,
+				noweHaslo: newPassword
+			}),
+		})
+			.then((res) => res.json())
+			.then((data) => {
+				if (data.error) {
+					statusDiv.textContent = '❌ ' + data.error;
+					statusDiv.style.color = '#dc2626';
+				} else {
+					statusDiv.textContent = '✅ ' + data.message;
+					statusDiv.style.color = '#10b981';
+					changePasswordForm.reset();
+					setTimeout(closePasswordModal, 1500);
+				}
+			})
+			.catch((err) => {
+				statusDiv.textContent = '❌ Błąd połączenia z serwerem.';
+				statusDiv.style.color = '#dc2626';
+			});
+	});
+}
+
+
+function deleteAccount() {
+	const loggedInUser = localStorage.getItem('loggedInUser');
+	if (!loggedInUser) return;
+
+	if (confirm('⚠️ UWAGA: Czy na pewno chcesz trwale usunąć swoje konto? Ta operacja usunie wszystkie Twoje dane oraz wystawione książki. Nie można tego cofnąć!')) {
+		fetch(`/api/delete-account/${loggedInUser}`, { method: 'DELETE' })
+			.then(res => res.json())
+			.then(data => {
+				if (data.error) {
+					alert('❌ Błąd usuwania konta: ' + data.error);
+				} else {
+					alert('✅ ' + data.message);
+					logout(); // Wylogowuje użytkownika (czyści local storage i przekierowuje)
+				}
+			})
+			.catch(err => console.error("Błąd podczas usuwania konta: ", err));
+	}
+}
+
+
 function fetchBooks() {
 	const tbody = document.getElementById('booksBody');
 	if (!tbody) return;
 
 	const loggedInUser = localStorage.getItem('loggedInUser');
 	if (!loggedInUser) {
-		tbody.innerHTML =
-			'<p class="text-muted-padded">Zaloguj się, aby zobaczyć swoją półkę.</p>';
+		tbody.innerHTML = '<p class="text-muted-padded">Zaloguj się, aby zobaczyć swoją półkę.</p>';
 		return;
 	}
 
 	fetch(`/api/test-books?user=${loggedInUser}`)
 		.then((response) => response.json())
 		.then((data) => {
-			// Statystyki widoczne na stronie profil.html
 			const statBooksEl = document.getElementById('statBooks');
 			const booksCountEl = document.getElementById('booksCount');
 			if (statBooksEl) statBooksEl.textContent = data.books.length;
@@ -212,8 +363,7 @@ function fetchBooks() {
 					tbody.innerHTML =
 						'<div class="empty-state"><div class="empty-state-icon">📚</div><h3>Brak książek</h3><p>Dodaj swoją pierwszą książkę do oferty!</p></div>';
 				} else {
-					tbody.innerHTML =
-						'<p class="text-muted-padded">Twoja półka ofert jest pusta.</p>';
+					tbody.innerHTML = '<p class="text-muted-padded">Twoja półka ofert jest pusta.</p>';
 				}
 				return;
 			}
@@ -222,7 +372,6 @@ function fetchBooks() {
 				const firstLetter = k.tytul.charAt(0).toUpperCase();
 
 				if (statBooksEl) {
-					// Wygląd dla zakładki w Profilu
 					tbody.innerHTML += `
                         <div class="book-item">
                             <div class="flex-gap-15">
@@ -240,7 +389,6 @@ function fetchBooks() {
                         </div>
                     `;
 				} else {
-					// Wygląd dla widoku na stronie Głównej/Półce
 					tbody.innerHTML += `
                         <div class="list-item">
                             <div class="item-icon">${firstLetter}</div>
@@ -256,17 +404,14 @@ function fetchBooks() {
 		});
 }
 
-/*
- GET: POBIERANIE KSIĄŻEK Z LISTY ŻYCZEŃ
- */
+
 function fetchWishlist() {
 	const tbody = document.getElementById('wishlistBody');
 	if (!tbody) return;
 
 	const loggedInUser = localStorage.getItem('loggedInUser');
 	if (!loggedInUser) {
-		tbody.innerHTML =
-			'<p class="text-muted-padded">Zaloguj się, aby zobaczyć swoją listę życzeń.</p>';
+		tbody.innerHTML = '<p class="text-muted-padded">Zaloguj się, aby zobaczyć swoją listę życzeń.</p>';
 		return;
 	}
 
@@ -285,8 +430,7 @@ function fetchWishlist() {
 					tbody.innerHTML =
 						'<div class="empty-state"><div class="empty-state-icon">❤️</div><h3>Pusta lista życzeń</h3><p>Dodaj książki, aby śledzić interesujące Tytuły!</p></div>';
 				} else {
-					tbody.innerHTML =
-						'<p class="text-muted-padded">Twoja lista życzeń jest pusta.</p>';
+					tbody.innerHTML = '<p class="text-muted-padded">Twoja lista życzeń jest pusta.</p>';
 				}
 				return;
 			}
@@ -295,7 +439,6 @@ function fetchWishlist() {
 				const firstLetter = k.tytul.charAt(0).toUpperCase();
 
 				if (statWishlistEl) {
-					// Wygląd dla Profilu
 					tbody.innerHTML += `
                         <div class="book-item">
                             <div class="flex-gap-15">
@@ -313,7 +456,6 @@ function fetchWishlist() {
                         </div>
                     `;
 				} else {
-					// Wygląd dla Mojej Półki
 					tbody.innerHTML += `
                         <div class="list-item">
                             <div class="item-icon wishlist-icon-bg">${firstLetter}</div>
@@ -329,9 +471,7 @@ function fetchWishlist() {
 		});
 }
 
-/**
-DELETE: USUWANIE REKORDÓW Z BAZY 
- */
+
 function deleteBook(id) {
 	if (!confirm('Czy na pewno chcesz usunąć tę książkę z półki ofert?')) return;
 
@@ -361,31 +501,18 @@ document.addEventListener('DOMContentLoaded', () => {
 		if (!loggedInUser) {
 			window.location.href = 'zaloguj.html';
 		} else {
-			const loggedInEmail =
-				localStorage.getItem('loggedInUserEmail') ||
-				localStorage.getItem('registeredUserEmail') ||
-				'';
 			const userNameEl = document.getElementById('userName');
 			const avatarDisplayEl = document.getElementById('avatarDisplay');
-			const profileEmailEl = document.getElementById('profileEmail');
 
 			if (userNameEl) userNameEl.textContent = loggedInUser;
-			if (avatarDisplayEl)
-				avatarDisplayEl.textContent = loggedInUser.charAt(0).toUpperCase();
-			if (profileEmailEl)
-				profileEmailEl.textContent = loggedInEmail || 'Brak adresu e-mail';
+			if (avatarDisplayEl) avatarDisplayEl.textContent = loggedInUser.charAt(0).toUpperCase();
+
+			loadProfileData();
 		}
 	}
 });
-/*
- ============================================
- LOGIKA AUTORYZACJI (LOGOWANIE I REJESTRACJA)
- ============================================
- */
 
-/*
- Przełączanie między formularzem logowania a rejestracji.
- */
+
 function switchAuthTab(tab) {
 	const tabs = document.querySelectorAll('.auth-tab');
 	const loginForm = document.getElementById('login-form');
@@ -406,9 +533,6 @@ function switchAuthTab(tab) {
 	}
 }
 
-/*
- Obsługa zapytania logowania (POST /api/login)
- */
 function handleLogin(e) {
 	e.preventDefault();
 	const login = document.getElementById('login-input').value;
@@ -428,7 +552,6 @@ function handleLogin(e) {
 				errorDiv.textContent = '❌ ' + data.error;
 				errorDiv.style.display = 'block';
 			} else {
-				// Zapisanie sesji w pamięci przeglądarki i przekierowanie
 				localStorage.setItem('loggedInUser', data.login);
 				if (data.email) {
 					localStorage.setItem('loggedInUserEmail', data.email);
@@ -442,9 +565,6 @@ function handleLogin(e) {
 		});
 }
 
-/*
- Obsługa zapytania rejestracji (POST /api/register)
- */
 function handleRegister(e) {
 	e.preventDefault();
 	const login = document.getElementById('reg-login').value;
@@ -455,7 +575,6 @@ function handleRegister(e) {
 
 	errorDiv.style.display = 'none';
 
-	// Walidacja zgodności haseł
 	if (haslo !== haslo2) {
 		errorDiv.textContent = '❌ Hasła nie są identyczne!';
 		errorDiv.style.display = 'block';
@@ -473,7 +592,6 @@ function handleRegister(e) {
 				errorDiv.textContent = '❌ ' + data.error;
 				errorDiv.style.display = 'block';
 			} else {
-				// Rejestracja udana
 				localStorage.setItem('registeredUserEmail', email);
 				document.getElementById('registerSuccessModal').style.display = 'block';
 				document.getElementById('register-form').reset();
@@ -485,9 +603,6 @@ function handleRegister(e) {
 		});
 }
 
-/*
- Zamykanie okna sukcesu po udanej rejestracji i przełączenie na logowanie
- */
 function closeRegisterSuccessModal() {
 	const modal = document.getElementById('registerSuccessModal');
 	if (modal) {
@@ -496,39 +611,28 @@ function closeRegisterSuccessModal() {
 	}
 }
 
-/*
- GET: POBIERANIE DOSTĘPNYCH KSIĄŻEK NA STRONIE AUKCJI (Z UWZGLĘDNIENIEM FILTRÓW)
- */
 function fetchAuctions() {
 	const auctionsBody = document.getElementById('auctionsBody');
 	const resultsCount = document.getElementById('results-count');
 	if (!auctionsBody) return;
 
-	// Pobranie aktualnych wartości wpisanych/wybranych przez użytkownika w formularzu bocznym
 	const searchInput = document.getElementById('search-title')?.value || '';
-	const categorySelect =
-		document.getElementById('filter-category')?.value || '';
-	const conditionSelect =
-		document.getElementById('filter-condition')?.value || '';
+	const categorySelect = document.getElementById('filter-category')?.value || '';
+	const conditionSelect = document.getElementById('filter-condition')?.value || '';
 
-	// Utworzenie parametrów zapytania (Query Parameters) dla adresu URL
 	const params = new URLSearchParams({
 		search: searchInput,
 		category: categorySelect,
 		condition: conditionSelect,
 	});
 
-	// Wysłanie żądania asynchronicznego do przygotowanego endpointu API
 	fetch(`/api/auctions?${params.toString()}`)
 		.then((response) => response.json())
 		.then((data) => {
-			// Aktualizacja liczby znalezionych ofert nad siatką kart
 			if (resultsCount) resultsCount.textContent = data.books.length;
 
-			// Czyszczenie dotychczasowej zawartości siatki przed wstawieniem nowych wyników
 			auctionsBody.innerHTML = '';
 
-			// Obsługa sytuacji, gdy żadna książka nie spełnia kryteriów wyszukiwania
 			if (data.books.length === 0) {
 				auctionsBody.innerHTML = `
                     <p style="grid-column: 1 / -1; text-align: center; color: #64748b; padding: 40px;">
@@ -538,11 +642,9 @@ function fetchAuctions() {
 				return;
 			}
 
-			// Iteracja po tablicy zwróconych książek i generowanie kodu HTML kart
 			data.books.forEach((k) => {
 				const firstLetter = k.tytul.charAt(0).toUpperCase();
 
-				// Używamy klas cards-grid, card-img, card-content ze strony głównej!
 				auctionsBody.innerHTML += `
                     <div class="book-card">
                         <div class="card-img">${firstLetter}</div>
@@ -568,9 +670,6 @@ function fetchAuctions() {
 		});
 }
 
-/*
- GET: POBIERANIE LOSOWYCH KSIĄŻEK NA STRONĘ GŁÓWNĄ
- */
 function fetchRandomBooks() {
 	const randomBody = document.getElementById('randomBooksBody');
 	if (!randomBody) return;
@@ -578,7 +677,7 @@ function fetchRandomBooks() {
 	fetch('/api/random-books')
 		.then((response) => response.json())
 		.then((data) => {
-			randomBody.innerHTML = ''; // Wyczyszczenie napisu "Ładowanie..."
+			randomBody.innerHTML = '';
 
 			if (data.books.length === 0) {
 				randomBody.innerHTML = `
