@@ -11,11 +11,50 @@ document.addEventListener('DOMContentLoaded', () => {
 		fetchRandomBooks();
 	}
 
-	// Obsługa inicjalizacji strony z aukcjami
-	if (document.getElementById('auctionsBody')) {
+	// OBSŁUGA KLIKNIĘCIA "SZUKAJ" NA STRONIE GŁÓWNEJ
+	const homeSearchBtn = document.getElementById('home-search-btn');
+	if (homeSearchBtn) {
+		homeSearchBtn.addEventListener('click', () => {
+			const searchInput = document.getElementById('home-search');
+			const categorySelect = document.getElementById('home-category');
+
+			// Bezpieczne pobranie wartości (zapobiega błędom w konsoli)
+			const searchVal = searchInput ? searchInput.value : '';
+			const categoryVal = categorySelect ? categorySelect.value : '';
+
+			const params = new URLSearchParams();
+			if (searchVal) params.append('search', searchVal);
+			if (categoryVal) params.append('category', categoryVal);
+
+			// Przekierowanie na podstronę aukcji z parametrami
+			window.location.href = `aukcje.html?${params.toString()}`;
+		});
+	}
+
+	// OBSŁUGA STRONY AUKCJI I PARAMETRÓW Z LINKU
+	const auctionsBody = document.getElementById('auctionsBody');
+	if (auctionsBody) {
 		const filterBtn = document.getElementById('apply-filters-btn');
 		if (filterBtn) {
 			filterBtn.addEventListener('click', fetchAuctions);
+		}
+
+		// Odczytujemy parametry przekazane z paska URL
+		const urlParams = new URLSearchParams(window.location.search);
+
+		if (urlParams.has('search') || urlParams.has('category')) {
+			const querySearch = urlParams.get('search') || '';
+			const queryCategory = urlParams.get('category') || '';
+
+			const searchTitleInput = document.getElementById('search-title');
+			const filterCategorySelect = document.getElementById('filter-category');
+
+			// BARDZO WAŻNE: Uzupełniamy pola tylko wtedy, gdy na pewno istnieją na stronie!
+			if (searchTitleInput) searchTitleInput.value = querySearch;
+			if (filterCategorySelect) filterCategorySelect.value = queryCategory;
+
+			// Automatycznie zaciągamy książki
+			fetchAuctions();
 		}
 	}
 
@@ -37,14 +76,16 @@ document.addEventListener('DOMContentLoaded', () => {
 	setupNavbarAuth();
 });
 
-
 function setupNavbarAuth() {
 	const loggedInUser = localStorage.getItem('loggedInUser');
 	const navLinks = document.querySelectorAll('.nav-links a');
 	let loginLink = null;
 
 	navLinks.forEach((link) => {
-		if (link.getAttribute('href') === 'profil.html' || link.getAttribute('href') === 'zaloguj.html') {
+		if (
+			link.getAttribute('href') === 'profil.html' ||
+			link.getAttribute('href') === 'zaloguj.html'
+		) {
 			loginLink = link;
 		}
 	});
@@ -69,14 +110,12 @@ function switchTab(tabName, event) {
 	}
 }
 
-
 function logout() {
 	localStorage.removeItem('loggedInUser');
 	localStorage.removeItem('loggedInUserEmail');
 	localStorage.removeItem('registeredUserEmail');
 	window.location.href = 'zaloguj.html';
 }
-
 
 function loadProfileData() {
 	const loggedInUser = localStorage.getItem('loggedInUser');
@@ -95,7 +134,8 @@ function loadProfileData() {
 			if (emailEl) emailEl.textContent = data.email || 'Brak e-maila';
 			if (locationEl) {
 				if (data.miasto || data.kod_pocztowy) {
-					locationEl.innerHTML = `<span>📍</span> ${(data.miasto || '')} ${(data.kod_pocztowy || '')}`.trim();
+					locationEl.innerHTML =
+						`<span>📍</span> ${data.miasto || ''} ${data.kod_pocztowy || ''}`.trim();
 				} else {
 					locationEl.innerHTML = `<span>📍</span> Nie podano lokalizacji`;
 				}
@@ -105,16 +145,21 @@ function loadProfileData() {
 			}
 
 			// 2. Wypełnienie formularza w Ustawieniach
-			if (document.getElementById('set-imie')) document.getElementById('set-imie').value = data.imie || '';
-			if (document.getElementById('set-nazwisko')) document.getElementById('set-nazwisko').value = data.nazwisko || '';
-			if (document.getElementById('set-telefon')) document.getElementById('set-telefon').value = data.telefon || '';
-			if (document.getElementById('set-miasto')) document.getElementById('set-miasto').value = data.miasto || '';
-			if (document.getElementById('set-kod')) document.getElementById('set-kod').value = data.kod_pocztowy || '';
-			if (document.getElementById('set-opis')) document.getElementById('set-opis').value = data.opis || '';
+			if (document.getElementById('set-imie'))
+				document.getElementById('set-imie').value = data.imie || '';
+			if (document.getElementById('set-nazwisko'))
+				document.getElementById('set-nazwisko').value = data.nazwisko || '';
+			if (document.getElementById('set-telefon'))
+				document.getElementById('set-telefon').value = data.telefon || '';
+			if (document.getElementById('set-miasto'))
+				document.getElementById('set-miasto').value = data.miasto || '';
+			if (document.getElementById('set-kod'))
+				document.getElementById('set-kod').value = data.kod_pocztowy || '';
+			if (document.getElementById('set-opis'))
+				document.getElementById('set-opis').value = data.opis || '';
 		})
 		.catch((err) => console.error('Błąd ładowania profilu:', err));
 }
-
 
 function saveSettings() {
 	const loggedInUser = localStorage.getItem('loggedInUser');
@@ -149,7 +194,6 @@ function saveSettings() {
 		})
 		.catch((err) => console.error('Błąd zapisywania profilu:', err));
 }
-
 
 function openModal(targetDestination) {
 	const modal = document.getElementById('addBookModal');
@@ -215,7 +259,6 @@ window.onclick = function (event) {
 	}
 };
 
-
 const addBookForm = document.getElementById('addBookForm');
 if (addBookForm) {
 	addBookForm.addEventListener('submit', function (e) {
@@ -234,7 +277,9 @@ if (addBookForm) {
 			autor: document.getElementById('autor').value,
 			kategoria: document.getElementById('kategoria').value,
 			stan: document.getElementById('stan').value,
-			ilosc: document.getElementById('ilosc') ? document.getElementById('ilosc').value : 1,
+			ilosc: document.getElementById('ilosc')
+				? document.getElementById('ilosc').value
+				: 1,
 			wlasciciel: loggedInUser,
 		};
 
@@ -269,7 +314,6 @@ if (addBookForm) {
 	});
 }
 
-
 const changePasswordForm = document.getElementById('changePasswordForm');
 if (changePasswordForm) {
 	changePasswordForm.addEventListener('submit', function (e) {
@@ -280,7 +324,9 @@ if (changePasswordForm) {
 
 		const oldPassword = document.getElementById('old-password').value;
 		const newPassword = document.getElementById('new-password').value;
-		const newPasswordConfirm = document.getElementById('new-password-confirm').value;
+		const newPasswordConfirm = document.getElementById(
+			'new-password-confirm',
+		).value;
 		const statusDiv = document.getElementById('passwordStatus');
 
 		if (newPassword !== newPasswordConfirm) {
@@ -295,7 +341,7 @@ if (changePasswordForm) {
 			body: JSON.stringify({
 				login: loggedInUser,
 				stareHaslo: oldPassword,
-				noweHaslo: newPassword
+				noweHaslo: newPassword,
 			}),
 		})
 			.then((res) => res.json())
@@ -317,15 +363,18 @@ if (changePasswordForm) {
 	});
 }
 
-
 function deleteAccount() {
 	const loggedInUser = localStorage.getItem('loggedInUser');
 	if (!loggedInUser) return;
 
-	if (confirm('⚠️ UWAGA: Czy na pewno chcesz trwale usunąć swoje konto? Ta operacja usunie wszystkie Twoje dane oraz wystawione książki. Nie można tego cofnąć!')) {
+	if (
+		confirm(
+			'⚠️ UWAGA: Czy na pewno chcesz trwale usunąć swoje konto? Ta operacja usunie wszystkie Twoje dane oraz wystawione książki. Nie można tego cofnąć!',
+		)
+	) {
 		fetch(`/api/delete-account/${loggedInUser}`, { method: 'DELETE' })
-			.then(res => res.json())
-			.then(data => {
+			.then((res) => res.json())
+			.then((data) => {
 				if (data.error) {
 					alert('❌ Błąd usuwania konta: ' + data.error);
 				} else {
@@ -333,10 +382,9 @@ function deleteAccount() {
 					logout(); // Wylogowuje użytkownika (czyści local storage i przekierowuje)
 				}
 			})
-			.catch(err => console.error("Błąd podczas usuwania konta: ", err));
+			.catch((err) => console.error('Błąd podczas usuwania konta: ', err));
 	}
 }
-
 
 function fetchBooks() {
 	const tbody = document.getElementById('booksBody');
@@ -344,7 +392,8 @@ function fetchBooks() {
 
 	const loggedInUser = localStorage.getItem('loggedInUser');
 	if (!loggedInUser) {
-		tbody.innerHTML = '<p class="text-muted-padded">Zaloguj się, aby zobaczyć swoją półkę.</p>';
+		tbody.innerHTML =
+			'<p class="text-muted-padded">Zaloguj się, aby zobaczyć swoją półkę.</p>';
 		return;
 	}
 
@@ -363,7 +412,8 @@ function fetchBooks() {
 					tbody.innerHTML =
 						'<div class="empty-state"><div class="empty-state-icon">📚</div><h3>Brak książek</h3><p>Dodaj swoją pierwszą książkę do oferty!</p></div>';
 				} else {
-					tbody.innerHTML = '<p class="text-muted-padded">Twoja półka ofert jest pusta.</p>';
+					tbody.innerHTML =
+						'<p class="text-muted-padded">Twoja półka ofert jest pusta.</p>';
 				}
 				return;
 			}
@@ -404,14 +454,14 @@ function fetchBooks() {
 		});
 }
 
-
 function fetchWishlist() {
 	const tbody = document.getElementById('wishlistBody');
 	if (!tbody) return;
 
 	const loggedInUser = localStorage.getItem('loggedInUser');
 	if (!loggedInUser) {
-		tbody.innerHTML = '<p class="text-muted-padded">Zaloguj się, aby zobaczyć swoją listę życzeń.</p>';
+		tbody.innerHTML =
+			'<p class="text-muted-padded">Zaloguj się, aby zobaczyć swoją listę życzeń.</p>';
 		return;
 	}
 
@@ -430,7 +480,8 @@ function fetchWishlist() {
 					tbody.innerHTML =
 						'<div class="empty-state"><div class="empty-state-icon">❤️</div><h3>Pusta lista życzeń</h3><p>Dodaj książki, aby śledzić interesujące Tytuły!</p></div>';
 				} else {
-					tbody.innerHTML = '<p class="text-muted-padded">Twoja lista życzeń jest pusta.</p>';
+					tbody.innerHTML =
+						'<p class="text-muted-padded">Twoja lista życzeń jest pusta.</p>';
 				}
 				return;
 			}
@@ -471,7 +522,6 @@ function fetchWishlist() {
 		});
 }
 
-
 function deleteBook(id) {
 	if (!confirm('Czy na pewno chcesz usunąć tę książkę z półki ofert?')) return;
 
@@ -505,13 +555,13 @@ document.addEventListener('DOMContentLoaded', () => {
 			const avatarDisplayEl = document.getElementById('avatarDisplay');
 
 			if (userNameEl) userNameEl.textContent = loggedInUser;
-			if (avatarDisplayEl) avatarDisplayEl.textContent = loggedInUser.charAt(0).toUpperCase();
+			if (avatarDisplayEl)
+				avatarDisplayEl.textContent = loggedInUser.charAt(0).toUpperCase();
 
 			loadProfileData();
 		}
 	}
 });
-
 
 function switchAuthTab(tab) {
 	const tabs = document.querySelectorAll('.auth-tab');
@@ -617,8 +667,10 @@ function fetchAuctions() {
 	if (!auctionsBody) return;
 
 	const searchInput = document.getElementById('search-title')?.value || '';
-	const categorySelect = document.getElementById('filter-category')?.value || '';
-	const conditionSelect = document.getElementById('filter-condition')?.value || '';
+	const categorySelect =
+		document.getElementById('filter-category')?.value || '';
+	const conditionSelect =
+		document.getElementById('filter-condition')?.value || '';
 
 	const params = new URLSearchParams({
 		search: searchInput,
@@ -646,12 +698,18 @@ function fetchAuctions() {
 				const firstLetter = k.tytul.charAt(0).toUpperCase();
 
 				auctionsBody.innerHTML += `
-                    <div class="book-card">
+             <div class="book-card">
                         <div class="card-img">${firstLetter}</div>
                         <div class="card-content">
                             <h3 style="margin-bottom: 5px;">${k.tytul}</h3>
-                            <p style="color: #64748b; margin-bottom: 10px;">${k.autor}</p>
-                            <p style="color: #10b981; font-weight: 600; font-size: 13px; margin-bottom: 15px;">Stan: ${k.stan}</p>
+                            <p style="color: #64748b; margin-bottom: 5px;">${k.autor}</p>
+                            <p style="color: #10b981; font-weight: 600; font-size: 13px; margin-bottom: 10px;">Stan: ${k.stan}</p>
+                            
+                            <div style="display: flex; align-items: center; gap: 5px; margin-bottom: 15px; font-size: 13px; color: #475569;">
+                                <span>👤 Wystawia:</span>
+                                <strong>${k.wlasciciel}</strong>
+                            </div>
+
                             <button class="btn-outline" onclick="alert('Funkcja składania ofert wymiany jest w trakcie budowy!')">
                                 Zaproponuj wymianę
                             </button>
@@ -696,8 +754,14 @@ function fetchRandomBooks() {
                         <div class="card-img">${firstLetter}</div>
                         <div class="card-content">
                             <h3 style="margin-bottom: 5px;">${k.tytul}</h3>
-                            <p style="color: #64748b; margin-bottom: 10px;">${k.autor}</p>
-                            <p style="color: #10b981; font-weight: 600; font-size: 13px; margin-bottom: 15px;">Stan: ${k.stan}</p>
+                            <p style="color: #64748b; margin-bottom: 5px;">${k.autor}</p>
+                            <p style="color: #10b981; font-weight: 600; font-size: 13px; margin-bottom: 10px;">Stan: ${k.stan}</p>
+                            
+                            <div style="display: flex; align-items: center; gap: 5px; margin-bottom: 15px; font-size: 13px; color: #475569;">
+                                <span>👤 Wystawia:</span>
+                                <strong>${k.wlasciciel}</strong>
+                            </div>
+
                             <button class="btn-outline" onclick="alert('Funkcja składania ofert wymiany jest w trakcie budowy!')">
                                 Zaproponuj wymianę
                             </button>

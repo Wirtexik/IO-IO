@@ -1,20 +1,22 @@
 CREATE TABLE IF NOT EXISTS Ksiazki (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    tytul VARCHAR(255) UNIQUE NOT NULL,
+    tytul VARCHAR(255) NOT NULL,
     autor VARCHAR(255) NOT NULL,
     kategoria ENUM('Fantastyka', 'Thriller', 'Romans', 'Sci-Fi', 'Horror', 'Dziecięca', 'Biografia', 'Reportaż', 'Historyczna', 'Przygodowa', 'Młodzieżowa', 'Powieść', 'Dramat', 'Epopeja', 'Wiersz', 'Epika', 'Inna') NOT NULL,
     stan ENUM('Nowa', 'Idealny', 'Bardzo dobry', 'Dobry', 'Dostateczny') NOT NULL,
     ilosc INT NOT NULL DEFAULT 1,
-    wlasciciel VARCHAR(255) NOT NULL
+    wlasciciel VARCHAR(255) NOT NULL,
+    UNIQUE(tytul, wlasciciel)
 );
 
 CREATE TABLE IF NOT EXISTS wishlist (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    tytul VARCHAR(255) UNIQUE NOT NULL,
+    tytul VARCHAR(255) NOT NULL,
     autor VARCHAR(255) NOT NULL,
     kategoria ENUM('Fantastyka', 'Thriller', 'Romans', 'Sci-Fi', 'Horror', 'Dziecięca', 'Biografia', 'Reportaż', 'Historyczna', 'Przygodowa', 'Młodzieżowa', 'Powieść', 'Dramat', 'Epopeja', 'Wiersz', 'Epika', 'Inna') NOT NULL,
     stan ENUM('Nowa', 'Idealny', 'Bardzo dobry', 'Dobry', 'Dostateczny') NOT NULL,
-    wlasciciel VARCHAR(255) NOT NULL
+    wlasciciel VARCHAR(255) NOT NULL,
+    UNIQUE(tytul, wlasciciel)
 );
 
 CREATE TABLE IF NOT EXISTS konta (
