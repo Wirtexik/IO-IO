@@ -251,11 +251,13 @@ window.onclick = function (zdarzenie) {
 	let modalRejestracji = document.getElementById('registerSuccessModal');
 	let modalHasla = document.getElementById('changePasswordModal');
 	let modalBlokady = document.getElementById('accountBlockedModal');
+	let modalWymiany = document.getElementById('modalWymiany');
 
 	if (zdarzenie.target == modalKsiazki) closeModal();
 	if (zdarzenie.target == modalRejestracji) closeRegisterSuccessModal();
 	if (zdarzenie.target == modalHasla) closePasswordModal();
 	if (zdarzenie.target == modalBlokady) closeAccountBlockedModal();
+	if (zdarzenie.target == modalWymiany) zamknijModalWymiany();
 };
 
 const formularzKsiazki = document.getElementById('addBookForm');
@@ -554,6 +556,8 @@ document.addEventListener('DOMContentLoaded', () => {
 				elementAwataru.textContent = zalogowanyUzytkownik.charAt(0).toUpperCase();
 
 			loadProfileData();
+			pobierzPrzychodzaceWymiany();
+			pobierzHistorieWymian();
 		}
 	}
 
@@ -717,7 +721,7 @@ function pobierzAukcje() {
                                 <strong>${ksiazka.wlasciciel}</strong>
                             </div>
 
-                            <button class="btn-outline" onclick="alert('Funkcja składania ofert wymiany jest w trakcie budowy!')">
+                            <button class="btn-outline" onclick="otworzModalWymiany(${ksiazka.id}, '${ksiazka.wlasciciel}')">
                                 Zaproponuj wymianę
                             </button>
                         </div>
@@ -769,7 +773,7 @@ function pobierzLosoweKsiazki() {
                                 <strong>${ksiazka.wlasciciel}</strong>
                             </div>
 
-                            <button class="btn-outline" onclick="alert('Funkcja składania ofert wymiany jest w trakcie budowy!')">
+                            <button class="btn-outline" onclick="otworzModalWymiany(${ksiazka.id}, '${ksiazka.wlasciciel}')">
                                 Zaproponuj wymianę
                             </button>
                         </div>
@@ -920,4 +924,162 @@ function adminZmienStatusBlokady(loginKonta, czyZablokowane) {
 		else pobierzUzytkownikowDlaAdmina(); 
 	})
 	.catch((blad) => console.error("Błąd zmiany statusu blokady:", blad));
+}
+
+//========================
+
+function otworzModalWymiany(idZadanejKsiazki, loginOdbiorcy) {
+    const zalogowanyUzytkownik = localStorage.getItem('zalogowanyUzytkownik');
+    if (!zalogowanyUzytkownik) {
+        alert('Musisz być zalogowany, aby zaproponować wymianę!');
+        window.location.href = 'zaloguj.html';
+        return;
+    }
+    if (zalogowanyUzytkownik === loginOdbiorcy) {
+        alert('Nie możesz zaproponować wymiany ze samym sobą!');
+        return;
+    }
+
+    const modal = document.getElementById('modalWymiany');
+    const select = document.getElementById('wymianaPropozycja');
+    modal.dataset.idZadanej = idZadanejKsiazki;
+    select.innerHTML = '<option value="">Ładowanie twoich książek...</option>';
+    modal.style.display = 'block';
+
+    fetch(`/api/test-books?user=${zalogowanyUzytkownik}`)
+        .then(r => r.json())
+        .then(dane => {
+            if (dane.books.length === 0) {
+                select.innerHTML = '<option value="">Nie masz książek do zaoferowania</option>';
+                return;
+            }
+            select.innerHTML = '<option value="">Wybierz książkę którą oferujesz</option>';
+            dane.books.forEach(k => {
+                select.innerHTML += `<option value="${k.id}">${k.tytul} — ${k.autor}</option>`;
+            });
+        });
+}
+
+function zamknijModalWymiany() {
+    const modal = document.getElementById('modalWymiany');
+    if (modal) modal.style.display = 'none';
+}
+
+function wyslijOferte() {
+    const zalogowanyUzytkownik = localStorage.getItem('zalogowanyUzytkownik');
+    const modal = document.getElementById('modalWymiany');
+    const idZadanej = modal.dataset.idZadanej;
+    const idOferowanej = document.getElementById('wymianaPropozycja').value;
+    const statusDiv = document.getElementById('statusWymiany');
+
+    if (!idOferowanej) {
+        statusDiv.textContent = '❌ Wybierz książkę do zaoferowania!';
+        statusDiv.style.color = '#dc2626';
+        return;
+    }
+
+    fetch('/api/wymiany', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            id_ksiazki_oferowanej: idOferowanej,
+            id_ksiazki_zadanej: idZadanej,
+            login_nadawcy: zalogowanyUzytkownik
+        })
+    })
+    .then(r => r.json())
+    .then(dane => {
+        if (dane.error) {
+            statusDiv.textContent = '❌ ' + dane.error;
+            statusDiv.style.color = '#dc2626';
+        } else {
+            statusDiv.textContent = '✅ Oferta wysłana!';
+            statusDiv.style.color = '#10b981';
+            setTimeout(zamknijModalWymiany, 1500);
+        }
+    });
+}
+
+function pobierzPrzychodzaceWymiany() {
+    const kontener = document.getElementById('wymianyCont');
+    if (!kontener) return;
+    const user = localStorage.getItem('zalogowanyUzytkownik');
+
+    fetch(`/api/wymiany?user=${user}`)
+        .then(r => r.json())
+        .then(dane => {
+            kontener.innerHTML = '';
+            if (dane.wymiany.length === 0) {
+                kontener.innerHTML = '<p class="text-muted-padded">Brak nowych propozycji wymiany.</p>';
+                return;
+            }
+            dane.wymiany.forEach(w => {
+                kontener.innerHTML += `
+                    <div class="book-item">
+                        <div class="book-item-info">
+                            <h4>📨 Oferta od: <strong>${w.login_nadawcy}</strong></h4>
+                            <p>Oferuje: <strong>${w.tytul_oferowanej}</strong> (${w.autor_oferowanej})</p>
+                            <p>W zamian za Twoją: <strong>${w.tytul_zadanej}</strong></p>
+                        </div>
+                        <div class="book-item-status" style="display:flex;gap:8px;">
+                            <button class="btn-success" onclick="odpowiedzNaWymiane(${w.id}, 'zaakceptowana')">✓ Zaakceptuj</button>
+                            <button class="btn-danger-outline" onclick="odpowiedzNaWymiane(${w.id}, 'odrzucona')">✗ Odrzuć</button>
+                        </div>
+                    </div>`;
+            });
+        });
+}
+
+function odpowiedzNaWymiane(idWymiany, status) {
+    const user = localStorage.getItem('zalogowanyUzytkownik');
+    fetch(`/api/wymiany/${idWymiany}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status, login: user })
+    })
+    .then(r => r.json())
+    .then(dane => {
+        if (dane.error) { alert('❌ ' + dane.error); return; }
+        alert(status === 'zaakceptowana' ? '✅ Wymiana zaakceptowana! Książki zostały usunięte z oferty.' : 'Wymiana odrzucona.');
+        pobierzPrzychodzaceWymiany();
+        pobierzKsiazki();
+		pobierzHistorieWymian();
+    });
+}
+
+// historia wymian 
+function pobierzHistorieWymian() {
+    const kontener = document.getElementById('historiaCont');
+    if (!kontener) return;
+    const user = localStorage.getItem('zalogowanyUzytkownik');
+
+    fetch(`/api/wymiany/historia?user=${user}`)
+        .then(r => r.json())
+        .then(dane => {
+            kontener.innerHTML = '';
+            if (dane.historia.length === 0) {
+                kontener.innerHTML = '<p class="text-muted-padded">Brak historii wymian.</p>';
+                return;
+            }
+            dane.historia.forEach(w => {
+                const czyNadawca = w.login_nadawcy === user;
+                const drugaStrona = czyNadawca ? w.login_odbiorcy : w.login_nadawcy;
+                const etykietaStatusu = w.status === 'zakonczona'
+                    ? '<span class="status-badge available">✓ Zakończona</span>'
+                    : '<span class="status-badge" style="background:#fee2e2;color:#dc2626;">✗ Odrzucona</span>';
+
+                kontener.innerHTML += `
+                    <div class="book-item">
+                        <div class="book-item-info">
+                            <h4>🔄 Wymiana z: <strong>${drugaStrona}</strong></h4>
+                            <p>Oferowana: <strong>${w.tytul_oferowanej}</strong> (${w.autor_oferowanej})</p>
+<p>Za: <strong>${w.tytul_zadanej}</strong> (${w.autor_zadanej})</p>
+                            <p style="font-size:12px;color:#94a3b8;">${new Date(w.data_utworzenia).toLocaleDateString('pl-PL')}</p>
+                        </div>
+                        <div class="book-item-status">
+                            ${etykietaStatusu}
+                        </div>
+                    </div>`;
+            });
+        });
 }

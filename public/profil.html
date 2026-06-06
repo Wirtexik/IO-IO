@@ -70,6 +70,12 @@
 					<button class="tab-button" onclick="switchTab('wishlist', event)">
 						❤️ Lista życzeń
 					</button>
+					<button class="tab-button" onclick="switchTab('wymiany', event)">
+   						🔄 Propozycje wymiany
+					</button>
+					<button class="tab-button" onclick="switchTab('historia', event)">
+						📋 Historia wymian
+					</button>
 					<button class="tab-button" onclick="switchTab('settings', event)">
 						⚙️ Ustawienia
 					</button>
@@ -108,10 +114,30 @@
 						<div class="books-list" id="wishlistBody"></div>
 					</div>
 				</div>
+				
+				
+				<div id="tab-wymiany" class="tab-content">
+				<div class="profile-card">
+					<div class="profile-tab-header">
+						<h3 class="profile-tab-title">Przychodzące propozycje wymiany</h3>
+					</div>
+					<div id="wymianyCont"></div>
+				</div>
+			</div>
 
-				<div id="tab-settings" class="tab-content">
-					<div class="profile-card">
-						<h3 class="profile-tab-title">Ustawienia konta</h3>
+
+				<div id="tab-historia" class="tab-content">
+	<div class="profile-card">
+		<div class="profile-tab-header">
+			<h3 class="profile-tab-title">Historia wymian</h3>
+		</div>
+		<div id="historiaCont"></div>
+	</div>
+</div>
+
+<div id="tab-settings" class="tab-content">
+	<div class="profile-card">
+		<h3 class="profile-tab-title">Ustawienia konta</h3>
 
 						<form class="settings-form">
 							<div class="form-row">
@@ -276,6 +302,18 @@
 					</form>
 				</div>
 			</div>
+			<div id="modalWymiany" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="zamknijModalWymiany()">&times;</span>
+        <h3 class="profile-tab-title">Zaproponuj wymianę</h3>
+        <p style="color:#64748b;margin:10px 0 15px;">Wybierz jedną ze swoich książek, którą zaoferujesz w zamian:</p>
+        <select id="wymianaPropozycja" style="width:100%;padding:10px;border:1px solid #e2e8f0;border-radius:8px;margin-bottom:12px;">
+            <option value="">Ładowanie...</option>
+        </select>
+        <button class="btn-success w-100" onclick="wyslijOferte()">Wyślij propozycję</button>
+        <div id="statusWymiany" style="text-align:center;margin-top:10px;"></div>
+    </div>
+</div>
 		</main>
 
 		<footer>

@@ -269,6 +269,110 @@ app.put('/api/admin/toggle-block', (req, res) => {
     });
 });
 
+
+
+//===================
+
+app.post('/api/wymiany', (req, res) => {
+    const { id_ksiazki_oferowanej, id_ksiazki_zadanej, login_nadawcy } = req.body;
+
+    connection.query('SELECT tytul, autor, wlasciciel FROM Ksiazki WHERE id = ?', [id_ksiazki_zadanej], (blad, wiersze) => {
+        if (blad) return res.json({ error: blad.message });
+        if (wiersze.length === 0) return res.json({ error: 'Nie znaleziono książki' });
+        const ksiazkaZadana = wiersze[0];
+        if (ksiazkaZadana.wlasciciel === login_nadawcy) return res.json({ error: 'Nie możesz wymieniać się ze sobą' });
+
+        connection.query('SELECT tytul, autor FROM Ksiazki WHERE id = ? AND wlasciciel = ?', [id_ksiazki_oferowanej, login_nadawcy], (blad2, wiersze2) => {
+            if (blad2) return res.json({ error: blad2.message });
+            if (wiersze2.length === 0) return res.json({ error: 'Nie posiadasz tej książki' });
+            const ksiazkaOferowana = wiersze2[0];
+
+            connection.query(
+                'INSERT INTO wymiany (id_ksiazki_oferowanej, id_ksiazki_zadanej, tytul_oferowanej, autor_oferowanej, tytul_zadanej, autor_zadanej, login_nadawcy, login_odbiorcy) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+                [id_ksiazki_oferowanej, id_ksiazki_zadanej, ksiazkaOferowana.tytul, ksiazkaOferowana.autor, ksiazkaZadana.tytul, ksiazkaZadana.autor, login_nadawcy, ksiazkaZadana.wlasciciel],
+                (blad3) => {
+                    if (blad3) return res.json({ error: blad3.message });
+                    res.json({ message: 'Oferta wysłana' });
+                }
+            );
+        });
+    });
+});
+//wymiany historia
+
+app.get('/api/wymiany/historia', (req, res) => {
+    const { user } = req.query;
+
+    connection.query(`
+        SELECT id, login_nadawcy, login_odbiorcy, status, data_utworzenia,
+               tytul_oferowanej, autor_oferowanej, tytul_zadanej, autor_zadanej
+        FROM wymiany
+        WHERE (login_nadawcy = ? OR login_odbiorcy = ?)
+        AND status IN ('zakonczona', 'odrzucona')
+        ORDER BY data_utworzenia DESC
+    `, [user, user], (blad, wiersze) => {
+        if (blad) return res.json({ error: blad.message });
+        res.json({ historia: wiersze });
+    });
+});
+
+app.get('/api/wymiany', (req, res) => {
+    const { user } = req.query;
+
+    connection.query(`
+        SELECT id, login_nadawcy, status,
+               tytul_oferowanej, autor_oferowanej, tytul_zadanej
+        FROM wymiany
+        WHERE login_odbiorcy = ? AND status = 'oczekuje'
+    `, [user], (blad, wiersze) => {
+        if (blad) return res.json({ error: blad.message });
+        res.json({ wymiany: wiersze });
+    });
+});
+
+// logkia wymian id
+
+app.put('/api/wymiany/:id', (req, res) => {
+    const { status, login } = req.body;
+    const { id } = req.params;
+
+    connection.query('SELECT * FROM wymiany WHERE id = ?', [id], (blad, wiersze) => {
+        if (blad) return res.json({ error: blad.message });
+        if (wiersze.length === 0) return res.json({ error: 'Nie znaleziono wymiany' });
+        const wymiana = wiersze[0];
+        if (wymiana.login_odbiorcy !== login) return res.json({ error: 'Brak uprawnień' });
+
+        const idOferowanej = wymiana.id_ksiazki_oferowanej;
+        const idZadanej = wymiana.id_ksiazki_zadanej;
+        const nowyStatus = status === 'zaakceptowana' ? 'zakonczona' : 'odrzucona';
+
+        connection.query('UPDATE wymiany SET status = ? WHERE id = ?', [nowyStatus, id], (blad2) => {
+            if (blad2) return res.json({ error: blad2.message });
+
+            if (nowyStatus === 'zakonczona') {
+                connection.query(
+                    'UPDATE wymiany SET status = ? WHERE id != ? AND status = ? AND (id_ksiazki_oferowanej IN (?, ?) OR id_ksiazki_zadanej IN (?, ?))',
+                    ['odrzucona', id, 'oczekuje', idOferowanej, idZadanej, idOferowanej, idZadanej],
+                    (blad3) => {
+                        if (blad3) return res.json({ error: blad3.message });
+
+                        connection.query('DELETE FROM Ksiazki WHERE id = ?', [idOferowanej], (blad4) => {
+                            if (blad4) return res.json({ error: blad4.message });
+                            connection.query('DELETE FROM Ksiazki WHERE id = ?', [idZadanej], (blad5) => {
+                                if (blad5) return res.json({ error: blad5.message });
+                                res.json({ message: 'Gotowe' });
+                            });
+                        });
+                    }
+                );
+            } else {
+                res.json({ message: 'Gotowe' });
+            }
+        });
+    });
+});
+// na koniec
+
 app.listen(PORT, () => {
     console.log(`Serwer dziala: http://localhost:${PORT}`);
 });
