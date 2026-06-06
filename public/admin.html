@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="pl">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Panel Administracyjny - Instant Book Exchange</title>
+		<link rel="stylesheet" href="style.css" />
+		<link
+			href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+			rel="stylesheet"
+		/>
+	</head>
+	<body>
+		<nav class="navbar">
+			<a href="index.html" class="nav-brand">Instant Book Exchange</a>
+			<div class="nav-links">
+				<a href="index.html">Strona główna</a>
+				<a href="shelf.html">Moja półka</a>
+				<a href="admin.html" class="active-link" id="nav-admin-link">Panel administracyjny</a>
+				<a href="profil.html" id="nav-profile-link">Mój profil</a>
+			</div>
+		</nav>
+
+		<main class="view-section">
+			<div class="profile-container">
+				<div class="profile-header">
+					<h1>Panel Administracyjny</h1>
+					<div class="profile-actions">
+						<button
+							class="btn-danger-outline btn-logout-width"
+							onclick="logout()"
+						>
+							Wyloguj
+						</button>
+					</div>
+				</div>
+
+				<div class="profile-tabs">
+					<button class="tab-button active" onclick="switchTab('admin-books', event)">
+						📚 Wszystkie Książki
+					</button>
+					<button class="tab-button" onclick="switchTab('admin-users', event)">
+						👥 Użytkownicy i Konta
+					</button>
+				</div>
+
+				<div id="tab-admin-books" class="tab-content active">
+					<div class="profile-card">
+						<div class="profile-tab-header">
+							<h3 class="profile-tab-title">
+								Wszystkie książki w systemie (<span id="adminBooksCount">0</span>)
+							</h3>
+						</div>
+						<div style="overflow-x: auto;">
+							<table class="admin-table">
+								<thead>
+									<tr>
+										<th>ID</th>
+										<th>Tytuł</th>
+										<th>Autor</th>
+										<th>Wystawiający</th>
+										<th>Kategoria</th>
+										<th>Stan</th>
+										<th>Akcje</th>
+									</tr>
+								</thead>
+								<tbody id="adminBooksBody">
+									<tr><td colspan="7" style="text-align:center;">Ładowanie danych...</td></tr>
+								</tbody>
+							</table>
+						</div>
+					</div>
+				</div>
+
+				<div id="tab-admin-users" class="tab-content">
+					<div class="profile-card">
+						<div class="profile-tab-header">
+							<h3 class="profile-tab-title">
+								Wszyscy użytkownicy (<span id="adminUsersCount">0</span>)
+							</h3>
+						</div>
+						<div style="overflow-x: auto;">
+							<table class="admin-table">
+								<thead>
+									<tr>
+										<th>ID</th>
+										<th>Login</th>
+										<th>Adres E-mail</th>
+										<th>Typ konta</th>
+										<th>Status</th> <th>Akcje</th>
+									</tr>
+								</thead>
+								<tbody id="adminUsersBody">
+									<tr><td colspan="6" style="text-align:center;">Ładowanie danych...</td></tr>
+								</tbody>
+							</table>
+						</div>
+					</div>
+				</div>
+
+			</div>
+		</main>
+
+		<footer>
+			<div class="footer-content">
+				<div class="footer-section">
+					<h4>Instant Book Exchange (Admin)</h4>
+					<p>Panel zarządzania platformą, użytkownikami i zgłoszeniami.</p>
+				</div>
+				<div class="footer-section">
+					<h4>Przydatne linki</h4>
+					<a href="index.html">Strona główna</a>
+					<a href="aukcje.html">Aukcje publiczne</a>
+				</div>
+				<div class="footer-section">
+					<h4>Pomoc techniczna</h4>
+					<a href="#">Dokumentacja API</a>
+					<a href="#">admin-support@bookexchange.pl</a>
+				</div>
+			</div>
+			<div class="footer-bottom">
+				<p>&copy; 2026 Instant Book Exchange. Panel chroniony.</p>
+			</div>
+		</footer>
+
+		<script src="script.js"></script>
+	</body>
+</html>

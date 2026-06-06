@@ -14,18 +14,18 @@ const connection = mysql.createConnection({
     multipleStatements: true
 });
 
-connection.connect((err) => {
-    if (err) return console.error(err.message);
+connection.connect((blad) => {
+    if (blad) return console.error(blad.message);
 
-    connection.query('CREATE DATABASE IF NOT EXISTS instant_book_exchange', (err) => {
-        if (err) return console.error(err.message);
+    connection.query('CREATE DATABASE IF NOT EXISTS instant_book_exchange', (bladTworzenia) => {
+        if (bladTworzenia) return console.error(bladTworzenia.message);
         
-        connection.changeUser({ database: 'instant_book_exchange' }, (err) => {
-            if (err) return console.error(err.message);
+        connection.changeUser({ database: 'instant_book_exchange' }, (bladZmiany) => {
+            if (bladZmiany) return console.error(bladZmiany.message);
 
-            const initSql = fs.readFileSync('./init.sql', 'utf8');
-            connection.query(initSql, (err) => {
-                if (err) console.error(err.message);
+            const skryptInit = fs.readFileSync('./init.sql', 'utf8');
+            connection.query(skryptInit, (bladSkryptu) => {
+                if (bladSkryptu) console.error(bladSkryptu.message);
             });
         });
     });
@@ -33,51 +33,54 @@ connection.connect((err) => {
 
 app.get('/api/test-books', (req, res) => {
     const uzytkownik = req.query.user;
+    const zapytanie = "SELECT * FROM Ksiazki WHERE wlasciciel = ? ORDER BY id ASC";
     
-    connection.query("SELECT * FROM Ksiazki WHERE wlasciciel = ? ORDER BY id ASC", [uzytkownik], (err, rows) => {
-        if (err) return res.status(500).json({ error: err.message });
-        res.json({ status: "Sukces!", books: rows });
+    connection.query(zapytanie, [uzytkownik], (blad, wiersze) => {
+        if (blad) return res.status(500).json({ error: blad.message });
+        res.json({ status: "Sukces!", books: wiersze });
     });
 });
 
 app.get('/api/wishlist', (req, res) => {
     const uzytkownik = req.query.user;
+    const zapytanie = "SELECT * FROM wishlist WHERE wlasciciel = ? ORDER BY id ASC";
     
-    connection.query("SELECT * FROM wishlist WHERE wlasciciel = ? ORDER BY id ASC", [uzytkownik], (err, rows) => {
-        if (err) return res.status(500).json({ error: err.message });
-        res.json({ status: "Sukces!", books: rows });
+    connection.query(zapytanie, [uzytkownik], (blad, wiersze) => {
+        if (blad) return res.status(500).json({ error: blad.message });
+        res.json({ status: "Sukces!", books: wiersze });
     });
 });
 
 app.post('/api/books', (req, res) => {
     const { tytul, autor, kategoria, stan, ilosc, destination, wlasciciel } = req.body;
-    const isWishlist = destination === 'wishlist';
-    const tableName = isWishlist ? 'wishlist' : 'Ksiazki';
+    const czyListaZyczen = destination === 'wishlist';
+    const nazwaTabeli = czyListaZyczen ? 'wishlist' : 'Ksiazki';
 
     if (!wlasciciel) {
         return res.status(400).json({ error: 'Musisz być zalogowany, aby dodać książkę!' });
     }
 
-    connection.query(`SELECT MAX(id) AS najwyzszeId FROM ${tableName}`, (err, rows) => {
-        if (err) return res.status(500).json({ error: err.message });
+    const zapytanieMaxId = `SELECT MAX(id) AS najwyzszeId FROM ${nazwaTabeli}`;
+    connection.query(zapytanieMaxId, (blad, wiersze) => {
+        if (blad) return res.status(500).json({ error: blad.message });
 
-        const noweId = (rows[0].najwyzszeId || 0) + 1;
+        const noweId = (wiersze[0].najwyzszeId || 0) + 1;
 
-        if (isWishlist) {
-            const query = "INSERT INTO wishlist (id, tytul, autor, kategoria, stan, wlasciciel) VALUES (?, ?, ?, ?, ?, ?)";
-            connection.query(query, [noweId, tytul, autor, kategoria, stan, wlasciciel], (err, result) => {
-                if (err) {
-                    if (err.code === 'ER_DUP_ENTRY') return res.status(400).json({ error: 'Książka o tym tytule już istnieje w liście życzeń!' });
-                    return res.status(500).json({ error: err.message });
+        if (czyListaZyczen) {
+            const zapytanieWstaw = "INSERT INTO wishlist (id, tytul, autor, kategoria, stan, wlasciciel) VALUES (?, ?, ?, ?, ?, ?)";
+            connection.query(zapytanieWstaw, [noweId, tytul, autor, kategoria, stan, wlasciciel], (bladWstawiania, wynik) => {
+                if (bladWstawiania) {
+                    if (bladWstawiania.code === 'ER_DUP_ENTRY') return res.status(400).json({ error: 'Książka o tym tytule już istnieje w liście życzeń!' });
+                    return res.status(500).json({ error: bladWstawiania.message });
                 }
                 res.json({ message: "Dodano książkę do listy życzeń!" });
             });
         } else {
-            const query = "INSERT INTO Ksiazki (id, tytul, autor, kategoria, stan, ilosc, wlasciciel) VALUES (?, ?, ?, ?, ?, ?, ?)";
-            connection.query(query, [noweId, tytul, autor, kategoria, stan, ilosc, wlasciciel], (err, result) => {
-                if (err) {
-                    if (err.code === 'ER_DUP_ENTRY') return res.status(400).json({ error: 'Książka o tym tytule już istnieje na półce!' });
-                    return res.status(500).json({ error: err.message });
+            const zapytanieWstaw = "INSERT INTO Ksiazki (id, tytul, autor, kategoria, stan, ilosc, wlasciciel) VALUES (?, ?, ?, ?, ?, ?, ?)";
+            connection.query(zapytanieWstaw, [noweId, tytul, autor, kategoria, stan, ilosc, wlasciciel], (bladWstawiania, wynik) => {
+                if (bladWstawiania) {
+                    if (bladWstawiania.code === 'ER_DUP_ENTRY') return res.status(400).json({ error: 'Książka o tym tytule już istnieje na półce!' });
+                    return res.status(500).json({ error: bladWstawiania.message });
                 }
                 res.json({ message: "Dodano książkę do półki ofert!" });
             });
@@ -86,17 +89,19 @@ app.post('/api/books', (req, res) => {
 });
 
 app.delete('/api/books/:id', (req, res) => {
-    const bookId = req.params.id;
-    connection.query("DELETE FROM Ksiazki WHERE id = ?", [bookId], (err, result) => {
-        if (err) return res.status(500).json({ error: err.message });
+    const idKsiazki = req.params.id;
+    const zapytanie = "DELETE FROM Ksiazki WHERE id = ?";
+    connection.query(zapytanie, [idKsiazki], (blad, wynik) => {
+        if (blad) return res.status(500).json({ error: blad.message });
         res.json({ message: "Książka została usunięta z półki!" });
     });
 });
 
 app.delete('/api/wishlist/:id', (req, res) => {
-    const bookId = req.params.id;
-    connection.query("DELETE FROM wishlist WHERE id = ?", [bookId], (err, result) => {
-        if (err) return res.status(500).json({ error: err.message });
+    const idKsiazki = req.params.id;
+    const zapytanie = "DELETE FROM wishlist WHERE id = ?";
+    connection.query(zapytanie, [idKsiazki], (blad, wynik) => {
+        if (blad) return res.status(500).json({ error: blad.message });
         res.json({ message: "Książka została usunięta z listy życzeń!" });
     });
 });
@@ -104,51 +109,51 @@ app.delete('/api/wishlist/:id', (req, res) => {
 app.get('/api/auctions', (req, res) => {
     const { search, category, condition } = req.query;
     
-    let query = "SELECT * FROM Ksiazki WHERE 1=1";
-    const params = [];
+    let zapytanie = "SELECT * FROM Ksiazki WHERE 1=1";
+    const parametry = [];
 
     if (search) {
-        query += " AND (tytul LIKE ? OR autor LIKE ?)";
-        params.push(`%${search}%`, `%${search}%`);
+        zapytanie += " AND (tytul LIKE ? OR autor LIKE ?)";
+        parametry.push(`%${search}%`, `%${search}%`);
     }
 
     if (category) {
-        query += " AND kategoria = ?";
-        params.push(category);
+        zapytanie += " AND kategoria = ?";
+        parametry.push(category);
     }
 
     if (condition) {
-        query += " AND stan = ?";
-        params.push(condition);
+        zapytanie += " AND stan = ?";
+        parametry.push(condition);
     }
 
-    query += " ORDER BY id DESC";
+    zapytanie += " ORDER BY id DESC";
 
-    connection.query(query, params, (err, rows) => {
-        if (err) return res.status(500).json({ error: err.message });
-        res.json({ books: rows });
+    connection.query(zapytanie, parametry, (blad, wiersze) => {
+        if (blad) return res.status(500).json({ error: blad.message });
+        res.json({ books: wiersze });
     });
 });
 
 app.get('/api/random-books', (req, res) => {
-    const query = "SELECT * FROM Ksiazki ORDER BY RAND() LIMIT 3";
+    const zapytanie = "SELECT * FROM Ksiazki ORDER BY RAND() LIMIT 3";
     
-    connection.query(query, (err, rows) => {
-        if (err) return res.status(500).json({ error: err.message });
-        res.json({ books: rows });
+    connection.query(zapytanie, (blad, wiersze) => {
+        if (blad) return res.status(500).json({ error: blad.message });
+        res.json({ books: wiersze });
     });
 });
 
 app.post('/api/register', (req, res) => {
     const { login, email, haslo } = req.body;
-    const query = "INSERT INTO konta (login, email, haslo, typ_konta) VALUES (?, ?, ?, 'Użytkownik')";
+    const zapytanie = "INSERT INTO konta (login, email, haslo, typ_konta, czy_zablokowane) VALUES (?, ?, ?, 'Użytkownik', FALSE)";
     
-    connection.query(query, [login, email, haslo], (err, result) => {
-        if (err) {
-            if (err.code === 'ER_DUP_ENTRY') {
+    connection.query(zapytanie, [login, email, haslo], (blad, wynik) => {
+        if (blad) {
+            if (blad.code === 'ER_DUP_ENTRY') {
                 return res.status(400).json({ error: 'Taki login lub adres e-mail jest już zajęty!' });
             }
-            return res.status(500).json({ error: err.message });
+            return res.status(500).json({ error: blad.message });
         }
         res.json({ message: "Konto zostało pomyślnie utworzone!" });
     });
@@ -156,43 +161,46 @@ app.post('/api/register', (req, res) => {
 
 app.post('/api/login', (req, res) => {
     const { login, haslo } = req.body;
+    const zapytanie = "SELECT login, typ_konta, czy_zablokowane FROM konta WHERE (login = ? OR email = ?) AND haslo = ?";
     
-    const query = "SELECT login FROM konta WHERE (login = ? OR email = ?) AND haslo = ?";
-    
-    connection.query(query, [login, login, haslo], (err, rows) => {
-        if (err) return res.status(500).json({ error: err.message });
+    connection.query(zapytanie, [login, login, haslo], (blad, wiersze) => {
+        if (blad) return res.status(500).json({ error: blad.message });
         
-        if (rows.length === 0) {
+        if (wiersze.length === 0) {
             return res.status(400).json({ error: 'Nieprawidłowy login/e-mail lub hasło!' });
         }
+        const daneUzytkownika = wiersze[0];
+        if (daneUzytkownika.czy_zablokowane) {
+            return res.status(403).json({ error: 'KONTO_ZABLOKOWANE' });
+        }
         
-        res.json({ success: true, login: rows[0].login });
+        res.json({ success: true, login: daneUzytkownika.login, typ_konta: daneUzytkownika.typ_konta });
     });
 });
 
 app.get('/api/profile', (req, res) => {
-    const login = req.query.user;
+    const loginKonta = req.query.user;
     
-    const query = "SELECT email, imie, nazwisko, telefon, miasto, kod_pocztowy, opis FROM konta WHERE login = ?";
-    connection.query(query, [login], (err, rows) => {
-        if (err) return res.status(500).json({ error: err.message });
-        if (rows.length === 0) return res.status(404).json({ error: 'Użytkownik nie znaleziony' });
+    const zapytanie = "SELECT email, imie, nazwisko, telefon, miasto, kod_pocztowy, opis FROM konta WHERE login = ?";
+    connection.query(zapytanie, [loginKonta], (blad, wiersze) => {
+        if (blad) return res.status(500).json({ error: blad.message });
+        if (wiersze.length === 0) return res.status(404).json({ error: 'Użytkownik nie znaleziony' });
         
-        res.json(rows[0]);
+        res.json(wiersze[0]);
     });
 });
 
 app.put('/api/profile', (req, res) => {
     const { login, imie, nazwisko, telefon, miasto, kod_pocztowy, opis } = req.body;
     
-    const query = `
+    const zapytanie = `
         UPDATE konta 
         SET imie = ?, nazwisko = ?, telefon = ?, miasto = ?, kod_pocztowy = ?, opis = ? 
         WHERE login = ?
     `;
     
-    connection.query(query, [imie, nazwisko, telefon, miasto, kod_pocztowy, opis, login], (err, result) => {
-        if (err) return res.status(500).json({ error: err.message });
+    connection.query(zapytanie, [imie, nazwisko, telefon, miasto, kod_pocztowy, opis, login], (blad, wynik) => {
+        if (blad) return res.status(500).json({ error: blad.message });
         res.json({ message: "Dane profilu zostały zaktualizowane!" });
     });
 });
@@ -200,38 +208,64 @@ app.put('/api/profile', (req, res) => {
 app.put('/api/change-password', (req, res) => {
     const { login, stareHaslo, noweHaslo } = req.body;
 
-    connection.query("SELECT haslo FROM konta WHERE login = ?", [login], (err, rows) => {
-        if (err) return res.status(500).json({ error: err.message });
-        if (rows.length === 0) return res.status(404).json({ error: 'Użytkownik nie znaleziony.' });
+    const zapytanieSprawdz = "SELECT haslo FROM konta WHERE login = ?";
+    connection.query(zapytanieSprawdz, [login], (blad, wiersze) => {
+        if (blad) return res.status(500).json({ error: blad.message });
+        if (wiersze.length === 0) return res.status(404).json({ error: 'Użytkownik nie znaleziony.' });
 
-        if (rows[0].haslo !== stareHaslo) {
+        if (wiersze[0].haslo !== stareHaslo) {
             return res.status(400).json({ error: 'Aktualne hasło jest nieprawidłowe!' });
         }
 
-        connection.query("UPDATE konta SET haslo = ? WHERE login = ?", [noweHaslo, login], (err, result) => {
-            if (err) return res.status(500).json({ error: err.message });
+        const zapytanieAktualizuj = "UPDATE konta SET haslo = ? WHERE login = ?";
+        connection.query(zapytanieAktualizuj, [noweHaslo, login], (bladAktualizacji, wynik) => {
+            if (bladAktualizacji) return res.status(500).json({ error: bladAktualizacji.message });
             res.json({ message: "Hasło zostało pomyślnie zmienione!" });
         });
     });
 });
 
 app.delete('/api/delete-account/:user', (req, res) => {
-    const login = req.params.user;
+    const loginKonta = req.params.user;
 
-    // Najpierw usuwamy książki z półki
-    connection.query("DELETE FROM Ksiazki WHERE wlasciciel = ?", [login], (err) => {
-        if (err) return res.status(500).json({ error: err.message });
+    const zapytanieKsiazki = "DELETE FROM Ksiazki WHERE wlasciciel = ?";
+    connection.query(zapytanieKsiazki, [loginKonta], (blad) => {
+        if (blad) return res.status(500).json({ error: blad.message });
 
-        // Następnie z wishlisty
-        connection.query("DELETE FROM wishlist WHERE wlasciciel = ?", [login], (err) => {
-            if (err) return res.status(500).json({ error: err.message });
+        const zapytanieZyczenia = "DELETE FROM wishlist WHERE wlasciciel = ?";
+        connection.query(zapytanieZyczenia, [loginKonta], (bladZyczen) => {
+            if (bladZyczen) return res.status(500).json({ error: bladZyczen.message });
 
-            // Na końcu usuwamy samo konto
-            connection.query("DELETE FROM konta WHERE login = ?", [login], (err) => {
-                if (err) return res.status(500).json({ error: err.message });
+            const zapytanieKonto = "DELETE FROM konta WHERE login = ?";
+            connection.query(zapytanieKonto, [loginKonta], (bladKonta) => {
+                if (bladKonta) return res.status(500).json({ error: bladKonta.message });
                 res.json({ message: "Konto zostało pomyślnie usunięte." });
             });
         });
+    });
+});
+app.get('/api/admin/books', (req, res) => {
+    const zapytanie = "SELECT * FROM Ksiazki ORDER BY id DESC";
+    connection.query(zapytanie, (blad, wiersze) => {
+        if (blad) return res.status(500).json({ error: blad.message });
+        res.json({ books: wiersze });
+    });
+});
+app.get('/api/admin/users', (req, res) => {
+    const zapytanie = "SELECT id, login, email, typ_konta, miasto, czy_zablokowane FROM konta ORDER BY id DESC";
+    connection.query(zapytanie, (blad, wiersze) => {
+        if (blad) return res.status(500).json({ error: blad.message });
+        res.json({ users: wiersze });
+    });
+});
+
+app.put('/api/admin/toggle-block', (req, res) => {
+    const { loginKonta, blokada } = req.body;
+    
+    const zapytanie = "UPDATE konta SET czy_zablokowane = ? WHERE login = ?";
+    connection.query(zapytanie, [blokada, loginKonta], (blad, wynik) => {
+        if (blad) return res.status(500).json({ error: blad.message });
+        res.json({ message: blokada ? "Konto zostało zablokowane." : "Konto zostało pomyślnie odblokowane." });
     });
 });
 

@@ -30,9 +30,10 @@ CREATE TABLE IF NOT EXISTS konta (
     telefon VARCHAR(20) DEFAULT NULL,
     miasto VARCHAR(255) DEFAULT NULL,
     kod_pocztowy VARCHAR(10) DEFAULT NULL,
-    opis TEXT DEFAULT NULL
+    opis TEXT DEFAULT NULL,
+    czy_zablokowane BOOLEAN NOT NULL DEFAULT FALSE
 );
 
-INSERT IGNORE INTO konta (login, email, haslo, typ_konta, imie, nazwisko, telefon, miasto, kod_pocztowy, opis) VALUES
-('admin', 'admin@bookexchange.pl', 'admin123', 'Moderator', 'Admin', 'Główny', '+48 555 444 333', 'Warszawa', '00-001', 'Konto administratora platformy.'),
-('kamil', 'kamil@kowal.pl', 'kowal123', 'Użytkownik', 'Kamil', 'Kowal', '+48 987 654 321', 'Płock', '09-400', 'Cześć! Jestem Kamil. ');
+INSERT IGNORE INTO konta (login, email, haslo, typ_konta, imie, nazwisko, telefon, miasto, kod_pocztowy, opis, czy_zablokowane) VALUES
+('admin', 'admin@bookexchange.pl', 'admin123', 'Moderator', 'Admin', 'Główny', '+48 555 444 333', 'Warszawa', '00-001', 'Konto administratora platformy.', FALSE),
+('kamil', 'kamil@kowal.pl', 'kowal123', 'Użytkownik', 'Kamil', 'Kowal', '+48 987 654 321', 'Płock', '09-400', 'Cześć! Jestem Kamil. ', FALSE);
