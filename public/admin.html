@@ -16,7 +16,9 @@
 			<div class="nav-links">
 				<a href="index.html">Strona główna</a>
 				<a href="shelf.html">Moja półka</a>
-				<a href="admin.html" class="active-link" id="nav-admin-link">Panel administracyjny</a>
+				<a href="admin.html" class="active-link" id="nav-admin-link"
+					>Panel administracyjny</a
+				>
 				<a href="profil.html" id="nav-profile-link">Mój profil</a>
 			</div>
 		</nav>
@@ -36,11 +38,20 @@
 				</div>
 
 				<div class="profile-tabs">
-					<button class="tab-button active" onclick="switchTab('admin-books', event)">
+					<button
+						class="tab-button active"
+						onclick="switchTab('admin-books', event)"
+					>
 						📚 Wszystkie Książki
 					</button>
 					<button class="tab-button" onclick="switchTab('admin-users', event)">
 						👥 Użytkownicy i Konta
+					</button>
+					<button
+						class="tab-button"
+						onclick="switchTab('admin-wymiany', event)"
+					>
+						🔄 Transakcje (Wymiany)
 					</button>
 				</div>
 
@@ -48,10 +59,11 @@
 					<div class="profile-card">
 						<div class="profile-tab-header">
 							<h3 class="profile-tab-title">
-								Wszystkie książki w systemie (<span id="adminBooksCount">0</span>)
+								Wszystkie książki w systemie (<span id="adminBooksCount">0</span
+								>)
 							</h3>
 						</div>
-						<div style="overflow-x: auto;">
+						<div style="overflow-x: auto">
 							<table class="admin-table">
 								<thead>
 									<tr>
@@ -65,7 +77,11 @@
 									</tr>
 								</thead>
 								<tbody id="adminBooksBody">
-									<tr><td colspan="7" style="text-align:center;">Ładowanie danych...</td></tr>
+									<tr>
+										<td colspan="7" style="text-align: center">
+											Ładowanie danych...
+										</td>
+									</tr>
 								</tbody>
 							</table>
 						</div>
@@ -79,7 +95,7 @@
 								Wszyscy użytkownicy (<span id="adminUsersCount">0</span>)
 							</h3>
 						</div>
-						<div style="overflow-x: auto;">
+						<div style="overflow-x: auto">
 							<table class="admin-table">
 								<thead>
 									<tr>
@@ -87,17 +103,55 @@
 										<th>Login</th>
 										<th>Adres E-mail</th>
 										<th>Typ konta</th>
-										<th>Status</th> <th>Akcje</th>
+										<th>Status</th>
+										<th>Akcje</th>
 									</tr>
 								</thead>
 								<tbody id="adminUsersBody">
-									<tr><td colspan="6" style="text-align:center;">Ładowanie danych...</td></tr>
+									<tr>
+										<td colspan="6" style="text-align: center">
+											Ładowanie danych...
+										</td>
+									</tr>
 								</tbody>
 							</table>
 						</div>
 					</div>
 				</div>
-
+				<div id="tab-admin-wymiany" class="tab-content">
+					<div class="profile-card">
+						<div class="profile-tab-header">
+							<h3 class="profile-tab-title">
+								Wszystkie transakcje w systemie (<span id="adminWymianyCount"
+									>0</span
+								>)
+							</h3>
+						</div>
+						<div style="overflow-x: auto">
+							<table class="admin-table">
+								<thead>
+									<tr>
+										<th>ID</th>
+										<th>Data</th>
+										<th>Nadawca</th>
+										<th>Odbiorca</th>
+										<th>Oferta</th>
+										<th>Żądanie</th>
+										<th>Status</th>
+										<th>Akcje</th>
+									</tr>
+								</thead>
+								<tbody id="adminWymianyBody">
+									<tr>
+										<td colspan="8" style="text-align: center">
+											Ładowanie danych...
+										</td>
+									</tr>
+								</tbody>
+							</table>
+						</div>
+					</div>
+				</div>
 			</div>
 		</main>
 

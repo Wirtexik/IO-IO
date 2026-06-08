@@ -4,7 +4,6 @@ CREATE TABLE IF NOT EXISTS Ksiazki (
     autor VARCHAR(255) NOT NULL,
     kategoria ENUM('Fantastyka', 'Thriller', 'Romans', 'Sci-Fi', 'Horror', 'Dziecięca', 'Biografia', 'Reportaż', 'Historyczna', 'Przygodowa', 'Młodzieżowa', 'Powieść', 'Dramat', 'Epopeja', 'Wiersz', 'Epika', 'Inna') NOT NULL,
     stan ENUM('Nowa', 'Idealny', 'Bardzo dobry', 'Dobry', 'Dostateczny') NOT NULL,
-    ilosc INT NOT NULL DEFAULT 1,
     wlasciciel VARCHAR(255) NOT NULL,
     UNIQUE(tytul, wlasciciel)
 );
@@ -56,7 +55,7 @@ INSERT IGNORE INTO konta (login, email, haslo, typ_konta, imie, nazwisko, telefo
 ('jacek', 'jacek@gmail.com', 'jacek123', 'Użytkownik', 'Jacek', 'Nowak', '+48 564 434 121', 'Gniezno', '05-200', 'Cześć! Jestem Jacek. ', FALSE),
 ('julia', 'julia@gmail.com', 'julia123', 'Użytkownik', 'Julia', 'Wiśniewska', '+48 111 222 333', 'Kraków', '30-001', 'Cześć! Jestem Julia.', FALSE);
 
-INSERT IGNORE INTO Ksiazki (tytul, autor, kategoria, stan, ilosc, wlasciciel) VALUES
-('Lalka', 'Bolesław Prus', 'Historyczna', 'Dobry', 1, 'kamil'),
-('Ferdydurke', 'Witold Gombrowicz', 'Powieść', 'Bardzo dobry', 1, 'jacek'),
-('Zbrodnia i kara', 'Fiodor Dostojewski', 'Powieść', 'Bardzo dobry', 1, 'julia');
+INSERT IGNORE INTO Ksiazki (tytul, autor, kategoria, stan, wlasciciel) VALUES
+('Lalka', 'Bolesław Prus', 'Historyczna', 'Dobry', 'kamil'),
+('Ferdydurke', 'Witold Gombrowicz', 'Powieść', 'Bardzo dobry', 'jacek'),
+('Zbrodnia i kara', 'Fiodor Dostojewski', 'Powieść', 'Bardzo dobry', 'julia');

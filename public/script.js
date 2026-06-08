@@ -16,7 +16,9 @@ document.addEventListener('DOMContentLoaded', () => {
 			const poleWyszukiwania = document.getElementById('home-search');
 			const poleKategorii = document.getElementById('home-category');
 
-			const wartoscWyszukiwania = poleWyszukiwania ? poleWyszukiwania.value : '';
+			const wartoscWyszukiwania = poleWyszukiwania
+				? poleWyszukiwania.value
+				: '';
 			const wartoscKategorii = poleKategorii ? poleKategorii.value : '';
 
 			const parametry = new URLSearchParams();
@@ -44,26 +46,26 @@ document.addEventListener('DOMContentLoaded', () => {
 
 			if (inputTytulu) inputTytulu.value = zapytanieSzukaj;
 			if (selectKategorii) selectKategorii.value = zapytanieKategoria;
-
-			pobierzAukcje();
 		}
-	}
 
-	const wyborDocelowy = document.getElementById('destination');
-	const poleIlosci = document.getElementById('ilosc');
-	if (wyborDocelowy && poleIlosci) {
-		wyborDocelowy.addEventListener('change', function () {
-			if (this.value === 'wishlist') {
-				poleIlosci.style.display = 'none';
-				poleIlosci.removeAttribute('required');
-			} else {
-				poleIlosci.style.display = 'block';
-				poleIlosci.setAttribute('required', 'required');
-			}
-		});
-	}
+		// ZMIANA: Pobieramy wszystkie oferty ZAWSZE po wejściu w zakładkę Aukcje.
+		// Skrypt sam zaciągnie filtry (jeśli jakieś zostały wpisane), a jeśli są puste - pokaże wszystko.
+		pobierzAukcje();
 
-	ustawNawigacjeLogowania();
+		// BONUS UX: Automatyczne szukanie po wciśnięciu klawisza "Enter" w polu wpisywania
+		const poleWyszukiwarki = document.getElementById('search-title');
+		if (poleWyszukiwarki) {
+			poleWyszukiwarki.addEventListener('keypress', (zdarzenie) => {
+				if (zdarzenie.key === 'Enter') pobierzAukcje();
+			});
+		}
+
+		// BONUS UX: Automatyczne szukanie od razu po zmianie kategorii lub stanu z listy rozwijanej
+		const poleKategorii = document.getElementById('filter-category');
+		const poleStanu = document.getElementById('filter-condition');
+		if (poleKategorii) poleKategorii.addEventListener('change', pobierzAukcje);
+		if (poleStanu) poleStanu.addEventListener('change', pobierzAukcje);
+	}
 });
 
 function ustawNawigacjeLogowania() {
@@ -278,7 +280,6 @@ if (formularzKsiazki) {
 			autor: document.getElementById('autor').value,
 			kategoria: document.getElementById('kategoria').value,
 			stan: document.getElementById('stan').value,
-			ilosc: document.getElementById('ilosc') ? document.getElementById('ilosc').value : 1,
 			wlasciciel: zalogowanyUzytkownik,
 		};
 
@@ -297,9 +298,6 @@ if (formularzKsiazki) {
 					statusDodawania.style.color = '#10b981';
 
 					document.getElementById('addBookForm').reset();
-					if (document.getElementById('ilosc')) {
-						document.getElementById('ilosc').style.display = 'block';
-					}
 
 					pobierzKsiazki();
 					pobierzListeZyczen();
@@ -323,7 +321,9 @@ if (formularzZaminyHasla) {
 
 		const stareHaslo = document.getElementById('old-password').value;
 		const noweHaslo = document.getElementById('new-password').value;
-		const powtorzoneHaslo = document.getElementById('new-password-confirm').value;
+		const powtorzoneHaslo = document.getElementById(
+			'new-password-confirm',
+		).value;
 		const divStatusuHasla = document.getElementById('passwordStatus');
 
 		if (noweHaslo !== powtorzoneHaslo) {
@@ -376,7 +376,7 @@ function deleteAccount() {
 					alert('❌ Błąd usuwania konta: ' + dane.error);
 				} else {
 					alert('✅ ' + dane.message);
-					logout(); 
+					logout();
 				}
 			})
 			.catch((blad) => console.error('Błąd podczas usuwania konta: ', blad));
@@ -426,7 +426,7 @@ function pobierzKsiazki() {
                                 <div class="book-item-info">
                                     <h4>${ksiazka.tytul}</h4>
                                     <p>${ksiazka.autor}</p>
-                                    <p>Kategoria: ${ksiazka.kategoria} • Stan: ${ksiazka.stan} • Sztuk: ${ksiazka.ilosc}</p>
+                                    <p>Kategoria: ${ksiazka.kategoria} • Stan: ${ksiazka.stan}</p>
                                 </div>
                             </div>
                             <div class="book-item-status">
@@ -441,7 +441,7 @@ function pobierzKsiazki() {
                             <div class="item-icon">${pierwszaLitera}</div>
                             <div class="item-details">
                                 <h4>${ksiazka.tytul}</h4>
-                                <p>${ksiazka.autor} • <span class="text-muted-sm">Sztuk: ${ksiazka.ilosc} (Stan: ${ksiazka.stan})</span></p>
+                                <p>${ksiazka.autor} • <span class="text-muted-sm">Stan: ${ksiazka.stan}</span></p>
                             </div>
                             <button class="btn-danger-outline" onclick="usunKsiazke(${ksiazka.id})">Usuń</button>
                         </div>
@@ -553,7 +553,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
 			if (elementNazwy) elementNazwy.textContent = zalogowanyUzytkownik;
 			if (elementAwataru)
-				elementAwataru.textContent = zalogowanyUzytkownik.charAt(0).toUpperCase();
+				elementAwataru.textContent = zalogowanyUzytkownik
+					.charAt(0)
+					.toUpperCase();
 
 			loadProfileData();
 			pobierzPrzychodzaceWymiany();
@@ -568,6 +570,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		} else {
 			pobierzKsiazkiDlaAdmina();
 			pobierzUzytkownikowDlaAdmina();
+			pobierzWymianyDlaAdmina();
 		}
 	}
 });
@@ -645,7 +648,11 @@ function handleRegister(zdarzenie) {
 	fetch('/api/register', {
 		method: 'POST',
 		headers: { 'Content-Type': 'application/json' },
-		body: JSON.stringify({ login: loginKonta, email: emailKonta, haslo: hasloKonta }),
+		body: JSON.stringify({
+			login: loginKonta,
+			email: emailKonta,
+			haslo: hasloKonta,
+		}),
 	})
 		.then((odpowiedz) => odpowiedz.json())
 		.then((dane) => {
@@ -680,8 +687,7 @@ function pobierzAukcje() {
 	const szukanyTytul = document.getElementById('search-title')?.value || '';
 	const szukanaKategoria =
 		document.getElementById('filter-category')?.value || '';
-	const szukanyStan =
-		document.getElementById('filter-condition')?.value || '';
+	const szukanyStan = document.getElementById('filter-condition')?.value || '';
 
 	const parametryUrl = new URLSearchParams({
 		search: szukanyTytul,
@@ -802,14 +808,16 @@ function pobierzKsiazkiDlaAdmina() {
 				cialoAdminKsiazek.innerHTML = `<tr><td colspan="7" style="text-align:center;color:red;">Błąd: ${dane.error}</td></tr>`;
 				return;
 			}
-			if (licznikAdminKsiazek) licznikAdminKsiazek.textContent = dane.books.length;
-			
+			if (licznikAdminKsiazek)
+				licznikAdminKsiazek.textContent = dane.books.length;
+
 			cialoAdminKsiazek.innerHTML = '';
 			if (dane.books.length === 0) {
-				cialoAdminKsiazek.innerHTML = '<tr><td colspan="7" style="text-align:center;">Brak książek w systemie.</td></tr>';
+				cialoAdminKsiazek.innerHTML =
+					'<tr><td colspan="7" style="text-align:center;">Brak książek w systemie.</td></tr>';
 				return;
 			}
-			
+
 			dane.books.forEach((ksiazka) => {
 				cialoAdminKsiazek.innerHTML += `
 					<tr>
@@ -826,7 +834,9 @@ function pobierzKsiazkiDlaAdmina() {
 				`;
 			});
 		})
-		.catch((blad) => console.error("Błąd pobierania książek dla admina:", blad));
+		.catch((blad) =>
+			console.error('Błąd pobierania książek dla admina:', blad),
+		);
 }
 
 function pobierzUzytkownikowDlaAdmina() {
@@ -841,25 +851,32 @@ function pobierzUzytkownikowDlaAdmina() {
 				cialoAdminUzytkownikow.innerHTML = `<tr><td colspan="6" style="text-align:center;color:red;">Błąd: ${dane.error}</td></tr>`;
 				return;
 			}
-			if (licznikAdminUzytkownikow) licznikAdminUzytkownikow.textContent = dane.users.length;
-			
+			if (licznikAdminUzytkownikow)
+				licznikAdminUzytkownikow.textContent = dane.users.length;
+
 			cialoAdminUzytkownikow.innerHTML = '';
 			if (dane.users.length === 0) {
-				cialoAdminUzytkownikow.innerHTML = '<tr><td colspan="6" style="text-align:center;">Brak użytkowników.</td></tr>';
+				cialoAdminUzytkownikow.innerHTML =
+					'<tr><td colspan="6" style="text-align:center;">Brak użytkowników.</td></tr>';
 				return;
 			}
-			
+
 			dane.users.forEach((uzytkownik) => {
-				const etykietaRoli = uzytkownik.typ_konta === 'Moderator' 
-					? '<span class="admin-role-badge">Moderator</span>' 
-					: '<span class="user-role-badge">Użytkownik</span>';
-					
-				const etykietaStatusu = uzytkownik.czy_zablokowane 
+				const etykietaRoli =
+					uzytkownik.typ_konta === 'Moderator'
+						? '<span class="admin-role-badge">Moderator</span>'
+						: '<span class="user-role-badge">Użytkownik</span>';
+
+				const etykietaStatusu = uzytkownik.czy_zablokowane
 					? '<span class="status-blocked">Zablokowane</span>'
 					: '<span class="status-active">Aktywne</span>';
 
-				const tekstPrzyciskuBlokady = uzytkownik.czy_zablokowane ? "Odblokuj" : "Zablokuj";
-				const klasaPrzyciskuBlokady = uzytkownik.czy_zablokowane ? "btn-success" : "btn-outline";
+				const tekstPrzyciskuBlokady = uzytkownik.czy_zablokowane
+					? 'Odblokuj'
+					: 'Zablokuj';
+				const klasaPrzyciskuBlokady = uzytkownik.czy_zablokowane
+					? 'btn-success'
+					: 'btn-outline';
 
 				let akcjeHTML = '';
 				if (uzytkownik.typ_konta !== 'Moderator') {
@@ -870,7 +887,8 @@ function pobierzUzytkownikowDlaAdmina() {
 						</div>
 					`;
 				} else {
-					akcjeHTML = '<span style="color:#94a3b8;font-size:12px;">Chronione</span>';
+					akcjeHTML =
+						'<span style="color:#94a3b8;font-size:12px;">Chronione</span>';
 				}
 
 				cialoAdminUzytkownikow.innerHTML += `
@@ -885,136 +903,159 @@ function pobierzUzytkownikowDlaAdmina() {
 				`;
 			});
 		})
-		.catch((blad) => console.error("Błąd pobierania użytkowników dla admina:", blad));
+		.catch((blad) =>
+			console.error('Błąd pobierania użytkowników dla admina:', blad),
+		);
 }
 
 function adminUsunKsiazke(idKsiazki) {
-	if (!confirm('Czy na pewno chcesz usunąć tę książkę z systemu? (Działanie jako Administrator)')) return;
-	
+	if (
+		!confirm(
+			'Czy na pewno chcesz usunąć tę książkę z systemu? (Działanie jako Administrator)',
+		)
+	)
+		return;
+
 	fetch(`/api/books/${idKsiazki}`, { method: 'DELETE' })
 		.then((odpowiedz) => odpowiedz.json())
 		.then(() => pobierzKsiazkiDlaAdmina());
 }
 
 function adminUsunUzytkownika(loginKonta) {
-	if (!confirm(`UWAGA: Czy na pewno chcesz trwale usunąć konto użytkownika "${loginKonta}" i WSZYSTKIE jego książki z platformy?`)) return;
-	
+	if (
+		!confirm(
+			`UWAGA: Czy na pewno chcesz trwale usunąć konto użytkownika "${loginKonta}" i WSZYSTKIE jego książki z platformy?`,
+		)
+	)
+		return;
+
 	fetch(`/api/delete-account/${loginKonta}`, { method: 'DELETE' })
 		.then((odpowiedz) => odpowiedz.json())
 		.then(() => {
 			pobierzUzytkownikowDlaAdmina();
-			pobierzKsiazkiDlaAdmina(); 
+			pobierzKsiazkiDlaAdmina();
 		});
 }
 
 function adminZmienStatusBlokady(loginKonta, czyZablokowane) {
 	const nowyStatusBlokady = !czyZablokowane;
-	const tekstWyborny = nowyStatusBlokady ? "zablokować" : "odblokować";
-	
-	if (!confirm(`Czy na pewno chcesz ${tekstWyborny} konto użytkownika "${loginKonta}"?`)) return;
+	const tekstWyborny = nowyStatusBlokady ? 'zablokować' : 'odblokować';
+
+	if (
+		!confirm(
+			`Czy na pewno chcesz ${tekstWyborny} konto użytkownika "${loginKonta}"?`,
+		)
+	)
+		return;
 
 	fetch('/api/admin/toggle-block', {
 		method: 'PUT',
 		headers: { 'Content-Type': 'application/json' },
-		body: JSON.stringify({ loginKonta: loginKonta, blokada: nowyStatusBlokady })
+		body: JSON.stringify({
+			loginKonta: loginKonta,
+			blokada: nowyStatusBlokady,
+		}),
 	})
-	.then((odpowiedz) => odpowiedz.json())
-	.then((dane) => {
-		if (dane.error) alert('Błąd: ' + dane.error);
-		else pobierzUzytkownikowDlaAdmina(); 
-	})
-	.catch((blad) => console.error("Błąd zmiany statusu blokady:", blad));
+		.then((odpowiedz) => odpowiedz.json())
+		.then((dane) => {
+			if (dane.error) alert('Błąd: ' + dane.error);
+			else pobierzUzytkownikowDlaAdmina();
+		})
+		.catch((blad) => console.error('Błąd zmiany statusu blokady:', blad));
 }
 
 //========================
 
 function otworzModalWymiany(idZadanejKsiazki, loginOdbiorcy) {
-    const zalogowanyUzytkownik = localStorage.getItem('zalogowanyUzytkownik');
-    if (!zalogowanyUzytkownik) {
-        alert('Musisz być zalogowany, aby zaproponować wymianę!');
-        window.location.href = 'zaloguj.html';
-        return;
-    }
-    if (zalogowanyUzytkownik === loginOdbiorcy) {
-        alert('Nie możesz zaproponować wymiany ze samym sobą!');
-        return;
-    }
+	const zalogowanyUzytkownik = localStorage.getItem('zalogowanyUzytkownik');
+	if (!zalogowanyUzytkownik) {
+		alert('Musisz być zalogowany, aby zaproponować wymianę!');
+		window.location.href = 'zaloguj.html';
+		return;
+	}
+	if (zalogowanyUzytkownik === loginOdbiorcy) {
+		alert('Nie możesz zaproponować wymiany ze samym sobą!');
+		return;
+	}
 
-    const modal = document.getElementById('modalWymiany');
-    const select = document.getElementById('wymianaPropozycja');
-    modal.dataset.idZadanej = idZadanejKsiazki;
-    select.innerHTML = '<option value="">Ładowanie twoich książek...</option>';
-    modal.style.display = 'block';
+	const modal = document.getElementById('modalWymiany');
+	const select = document.getElementById('wymianaPropozycja');
+	modal.dataset.idZadanej = idZadanejKsiazki;
+	select.innerHTML = '<option value="">Ładowanie twoich książek...</option>';
+	modal.style.display = 'block';
 
-    fetch(`/api/test-books?user=${zalogowanyUzytkownik}`)
-        .then(r => r.json())
-        .then(dane => {
-            if (dane.books.length === 0) {
-                select.innerHTML = '<option value="">Nie masz książek do zaoferowania</option>';
-                return;
-            }
-            select.innerHTML = '<option value="">Wybierz książkę którą oferujesz</option>';
-            dane.books.forEach(k => {
-                select.innerHTML += `<option value="${k.id}">${k.tytul} — ${k.autor}</option>`;
-            });
-        });
+	fetch(`/api/test-books?user=${zalogowanyUzytkownik}`)
+		.then((r) => r.json())
+		.then((dane) => {
+			if (dane.books.length === 0) {
+				select.innerHTML =
+					'<option value="">Nie masz książek do zaoferowania</option>';
+				return;
+			}
+			select.innerHTML =
+				'<option value="">Wybierz książkę którą oferujesz</option>';
+			dane.books.forEach((k) => {
+				select.innerHTML += `<option value="${k.id}">${k.tytul} — ${k.autor}</option>`;
+			});
+		});
 }
 
 function zamknijModalWymiany() {
-    const modal = document.getElementById('modalWymiany');
-    if (modal) modal.style.display = 'none';
+	const modal = document.getElementById('modalWymiany');
+	if (modal) modal.style.display = 'none';
 }
 
 function wyslijOferte() {
-    const zalogowanyUzytkownik = localStorage.getItem('zalogowanyUzytkownik');
-    const modal = document.getElementById('modalWymiany');
-    const idZadanej = modal.dataset.idZadanej;
-    const idOferowanej = document.getElementById('wymianaPropozycja').value;
-    const statusDiv = document.getElementById('statusWymiany');
+	const zalogowanyUzytkownik = localStorage.getItem('zalogowanyUzytkownik');
+	const modal = document.getElementById('modalWymiany');
+	const idZadanej = modal.dataset.idZadanej;
+	const idOferowanej = document.getElementById('wymianaPropozycja').value;
+	const statusDiv = document.getElementById('statusWymiany');
 
-    if (!idOferowanej) {
-        statusDiv.textContent = '❌ Wybierz książkę do zaoferowania!';
-        statusDiv.style.color = '#dc2626';
-        return;
-    }
+	if (!idOferowanej) {
+		statusDiv.textContent = '❌ Wybierz książkę do zaoferowania!';
+		statusDiv.style.color = '#dc2626';
+		return;
+	}
 
-    fetch('/api/wymiany', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            id_ksiazki_oferowanej: idOferowanej,
-            id_ksiazki_zadanej: idZadanej,
-            login_nadawcy: zalogowanyUzytkownik
-        })
-    })
-    .then(r => r.json())
-    .then(dane => {
-        if (dane.error) {
-            statusDiv.textContent = '❌ ' + dane.error;
-            statusDiv.style.color = '#dc2626';
-        } else {
-            statusDiv.textContent = '✅ Oferta wysłana!';
-            statusDiv.style.color = '#10b981';
-            setTimeout(zamknijModalWymiany, 1500);
-        }
-    });
+	fetch('/api/wymiany', {
+		method: 'POST',
+		headers: { 'Content-Type': 'application/json' },
+		body: JSON.stringify({
+			id_ksiazki_oferowanej: idOferowanej,
+			id_ksiazki_zadanej: idZadanej,
+			login_nadawcy: zalogowanyUzytkownik,
+		}),
+	})
+		.then((r) => r.json())
+		.then((dane) => {
+			if (dane.error) {
+				statusDiv.textContent = '❌ ' + dane.error;
+				statusDiv.style.color = '#dc2626';
+			} else {
+				statusDiv.textContent = '✅ Oferta wysłana!';
+				statusDiv.style.color = '#10b981';
+				setTimeout(zamknijModalWymiany, 1500);
+			}
+		});
 }
 
 function pobierzPrzychodzaceWymiany() {
-    const kontener = document.getElementById('wymianyCont');
-    if (!kontener) return;
-    const user = localStorage.getItem('zalogowanyUzytkownik');
+	const kontener = document.getElementById('wymianyCont');
+	if (!kontener) return;
+	const user = localStorage.getItem('zalogowanyUzytkownik');
 
-    fetch(`/api/wymiany?user=${user}`)
-        .then(r => r.json())
-        .then(dane => {
-            kontener.innerHTML = '';
-            if (dane.wymiany.length === 0) {
-                kontener.innerHTML = '<p class="text-muted-padded">Brak nowych propozycji wymiany.</p>';
-                return;
-            }
-            dane.wymiany.forEach(w => {
-                kontener.innerHTML += `
+	fetch(`/api/wymiany?user=${user}`)
+		.then((r) => r.json())
+		.then((dane) => {
+			kontener.innerHTML = '';
+			if (dane.wymiany.length === 0) {
+				kontener.innerHTML =
+					'<p class="text-muted-padded">Brak nowych propozycji wymiany.</p>';
+				return;
+			}
+			dane.wymiany.forEach((w) => {
+				kontener.innerHTML += `
                     <div class="book-item">
                         <div class="book-item-info">
                             <h4>📨 Oferta od: <strong>${w.login_nadawcy}</strong></h4>
@@ -1026,49 +1067,58 @@ function pobierzPrzychodzaceWymiany() {
                             <button class="btn-danger-outline" onclick="odpowiedzNaWymiane(${w.id}, 'odrzucona')">✗ Odrzuć</button>
                         </div>
                     </div>`;
-            });
-        });
+			});
+		});
 }
 
 function odpowiedzNaWymiane(idWymiany, status) {
-    const user = localStorage.getItem('zalogowanyUzytkownik');
-    fetch(`/api/wymiany/${idWymiany}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status, login: user })
-    })
-    .then(r => r.json())
-    .then(dane => {
-        if (dane.error) { alert('❌ ' + dane.error); return; }
-        alert(status === 'zaakceptowana' ? '✅ Wymiana zaakceptowana! Książki zostały usunięte z oferty.' : 'Wymiana odrzucona.');
-        pobierzPrzychodzaceWymiany();
-        pobierzKsiazki();
-		pobierzHistorieWymian();
-    });
+	const user = localStorage.getItem('zalogowanyUzytkownik');
+	fetch(`/api/wymiany/${idWymiany}`, {
+		method: 'PUT',
+		headers: { 'Content-Type': 'application/json' },
+		body: JSON.stringify({ status, login: user }),
+	})
+		.then((r) => r.json())
+		.then((dane) => {
+			if (dane.error) {
+				alert('❌ ' + dane.error);
+				return;
+			}
+			alert(
+				status === 'zaakceptowana'
+					? '✅ Wymiana zaakceptowana! Książki zostały usunięte z oferty.'
+					: 'Wymiana odrzucona.',
+			);
+			pobierzPrzychodzaceWymiany();
+			pobierzKsiazki();
+			pobierzHistorieWymian();
+		});
 }
 
-// historia wymian 
+// historia wymian
 function pobierzHistorieWymian() {
-    const kontener = document.getElementById('historiaCont');
-    if (!kontener) return;
-    const user = localStorage.getItem('zalogowanyUzytkownik');
+	const kontener = document.getElementById('historiaCont');
+	if (!kontener) return;
+	const user = localStorage.getItem('zalogowanyUzytkownik');
 
-    fetch(`/api/wymiany/historia?user=${user}`)
-        .then(r => r.json())
-        .then(dane => {
-            kontener.innerHTML = '';
-            if (dane.historia.length === 0) {
-                kontener.innerHTML = '<p class="text-muted-padded">Brak historii wymian.</p>';
-                return;
-            }
-            dane.historia.forEach(w => {
-                const czyNadawca = w.login_nadawcy === user;
-                const drugaStrona = czyNadawca ? w.login_odbiorcy : w.login_nadawcy;
-                const etykietaStatusu = w.status === 'zakonczona'
-                    ? '<span class="status-badge available">✓ Zakończona</span>'
-                    : '<span class="status-badge" style="background:#fee2e2;color:#dc2626;">✗ Odrzucona</span>';
+	fetch(`/api/wymiany/historia?user=${user}`)
+		.then((r) => r.json())
+		.then((dane) => {
+			kontener.innerHTML = '';
+			if (dane.historia.length === 0) {
+				kontener.innerHTML =
+					'<p class="text-muted-padded">Brak historii wymian.</p>';
+				return;
+			}
+			dane.historia.forEach((w) => {
+				const czyNadawca = w.login_nadawcy === user;
+				const drugaStrona = czyNadawca ? w.login_odbiorcy : w.login_nadawcy;
+				const etykietaStatusu =
+					w.status === 'zakonczona'
+						? '<span class="status-badge available">✓ Zakończona</span>'
+						: '<span class="status-badge" style="background:#fee2e2;color:#dc2626;">✗ Odrzucona</span>';
 
-                kontener.innerHTML += `
+				kontener.innerHTML += `
                     <div class="book-item">
                         <div class="book-item-info">
                             <h4>🔄 Wymiana z: <strong>${drugaStrona}</strong></h4>
@@ -1080,6 +1130,121 @@ function pobierzHistorieWymian() {
                             ${etykietaStatusu}
                         </div>
                     </div>`;
-            });
-        });
+			});
+		});
+}
+
+// ==========================================
+// FUNKCJE PANELU ADMINA - TRANSAKCJE
+// ==========================================
+
+function pobierzWymianyDlaAdmina() {
+	const cialoAdminWymiany = document.getElementById('adminWymianyBody');
+	const licznikAdminWymiany = document.getElementById('adminWymianyCount');
+	if (!cialoAdminWymiany) return;
+
+	fetch('/api/admin/wymiany')
+		.then((odpowiedz) => odpowiedz.json())
+		.then((dane) => {
+			if (dane.error) {
+				cialoAdminWymiany.innerHTML = `<tr><td colspan="8" style="text-align:center;color:red;">Błąd: ${dane.error}</td></tr>`;
+				return;
+			}
+			if (licznikAdminWymiany)
+				licznikAdminWymiany.textContent = dane.wymiany.length;
+
+			cialoAdminWymiany.innerHTML = '';
+			if (dane.wymiany.length === 0) {
+				cialoAdminWymiany.innerHTML =
+					'<tr><td colspan="8" style="text-align:center;">Brak transakcji w systemie.</td></tr>';
+				return;
+			}
+
+			dane.wymiany.forEach((wymiana) => {
+				const dataUtworzenia = new Date(
+					wymiana.data_utworzenia,
+				).toLocaleDateString('pl-PL');
+
+				// Formatowanie estetycznych etykiet dla statusu
+				let etykietaStatusu = '';
+				if (wymiana.status === 'oczekuje')
+					etykietaStatusu =
+						'<span class="status-badge" style="background:#fef08a;color:#9a3412;">Oczekuje</span>';
+				else if (wymiana.status === 'zakonczona')
+					etykietaStatusu =
+						'<span class="status-badge available">Zakończona</span>';
+				else if (wymiana.status === 'odrzucona')
+					etykietaStatusu =
+						'<span class="status-badge" style="background:#fee2e2;color:#dc2626;">Odrzucona</span>';
+				else if (wymiana.status === 'zablokowana')
+					etykietaStatusu = '<span class="status-blocked">Zablokowana</span>';
+				else
+					etykietaStatusu = `<span class="status-badge">${wymiana.status}</span>`;
+
+				// Logika przycisku Blokuj/Odblokuj
+				let zablokujBtn = '';
+				if (wymiana.status !== 'zablokowana') {
+					zablokujBtn = `<button class="btn-outline btn-sec-action" style="padding: 4px 8px; font-size: 12px; margin: 0;" onclick="adminZmienStatusWymiany(${wymiana.id}, 'zablokowana')">Zablokuj</button>`;
+				} else {
+					zablokujBtn = `<button class="btn-success btn-sec-action" style="padding: 4px 8px; font-size: 12px; margin: 0;" onclick="adminZmienStatusWymiany(${wymiana.id}, 'odrzucona')">Odblokuj (Odrzuć)</button>`;
+				}
+
+				cialoAdminWymiany.innerHTML += `
+					<tr>
+						<td>#${wymiana.id}</td>
+						<td>${dataUtworzenia}</td>
+						<td><strong>${wymiana.login_nadawcy}</strong></td>
+						<td><strong>${wymiana.login_odbiorcy}</strong></td>
+						<td>${wymiana.tytul_oferowanej}</td>
+						<td>${wymiana.tytul_zadanej}</td>
+						<td>${etykietaStatusu}</td>
+						<td>
+                            <div style="display: flex; gap: 5px;">
+							    ${zablokujBtn}
+							    <button class="btn-danger-outline btn-sec-action" style="padding: 4px 8px; font-size: 12px; margin: 0;" onclick="adminUsunWymiane(${wymiana.id})">Usuń</button>
+                            </div>
+						</td>
+					</tr>
+				`;
+			});
+		})
+		.catch((blad) =>
+			console.error('Błąd pobierania transakcji dla admina:', blad),
+		);
+}
+
+function adminZmienStatusWymiany(idWymiany, nowyStatus) {
+	if (
+		!confirm(
+			`Czy na pewno chcesz zmienić status tej transakcji na: ${nowyStatus.toUpperCase()}? (Opcja zablokuj uniemożliwia realizację akcji)`,
+		)
+	)
+		return;
+
+	fetch(`/api/admin/wymiany/${idWymiany}/status`, {
+		method: 'PUT',
+		headers: { 'Content-Type': 'application/json' },
+		body: JSON.stringify({ status: nowyStatus }),
+	})
+		.then((r) => r.json())
+		.then((dane) => {
+			if (dane.error) alert('Błąd: ' + dane.error);
+			else pobierzWymianyDlaAdmina();
+		});
+}
+
+function adminUsunWymiane(idWymiany) {
+	if (
+		!confirm(
+			'UWAGA: Czy na pewno chcesz trwale usunąć tę transakcję z bazy danych? Ta akcja jest nieodwracalna.',
+		)
+	)
+		return;
+
+	fetch(`/api/admin/wymiany/${idWymiany}`, { method: 'DELETE' })
+		.then((r) => r.json())
+		.then((dane) => {
+			if (dane.error) alert('Błąd: ' + dane.error);
+			else pobierzWymianyDlaAdmina();
+		});
 }
