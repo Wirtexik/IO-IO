@@ -49,6 +49,18 @@ CREATE TABLE IF NOT EXISTS wymiany (
     FOREIGN KEY (id_ksiazki_oferowanej) REFERENCES Ksiazki(id) ON DELETE SET NULL,
     FOREIGN KEY (id_ksiazki_zadanej) REFERENCES Ksiazki(id) ON DELETE SET NULL
 );
+
+CREATE TABLE IF NOT EXISTS opinie (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    id_wymiany INT NOT NULL,
+    oceniajacy VARCHAR(255) NOT NULL,
+    oceniany VARCHAR(255) NOT NULL,
+    ocena INT NOT NULL CHECK (ocena >= 1 AND ocena <= 5),
+    komentarz TEXT,
+    data_dodania DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (id_wymiany) REFERENCES wymiany(id) ON DELETE CASCADE
+);
+
 INSERT IGNORE INTO konta (login, email, haslo, typ_konta, imie, nazwisko, telefon, miasto, kod_pocztowy, opis, czy_zablokowane) VALUES
 ('admin', 'admin@bookexchange.pl', 'admin123', 'Moderator', 'Admin', 'Główny', '+48 555 444 333', 'Warszawa', '00-001', 'Konto administratora platformy.', FALSE),
 ('kamil', 'kamil@gmail.com', 'kowal123', 'Użytkownik', 'Kamil', 'Kowal', '+48 987 654 321', 'Płock', '09-400', 'Cześć! Jestem Kamil. ', FALSE),

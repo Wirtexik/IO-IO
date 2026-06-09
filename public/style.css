@@ -941,55 +941,71 @@ footer {
 }
 
 .admin-table {
-				width: 100%;
-				border-collapse: collapse;
-				margin-top: 10px;
-			}
-			.admin-table th, .admin-table td {
-				padding: 12px 15px;
-				text-align: left;
-				border-bottom: 1px solid var(--border);
-				font-size: 14px;
-				vertical-align: middle;
-			}
-			.admin-table th {
-				background-color: #f8fafc;
-				color: var(--dark);
-				font-weight: 600;
-			}
-			.admin-table tr:hover {
-				background-color: #f1f5f9;
-			}
-			.admin-role-badge {
-				background: #dcfce7;
-				color: #166534;
-				padding: 4px 8px;
-				border-radius: 4px;
-				font-size: 12px;
-				font-weight: bold;
-			}
-			.user-role-badge {
-				background: #e0f2fe;
-				color: #0369a1;
-				padding: 4px 8px;
-				border-radius: 4px;
-				font-size: 12px;
-				font-weight: bold;
-			}
-			
-			.status-active {
-				background: #dcfce7;
-				color: #166534;
-				padding: 4px 8px;
-				border-radius: 4px;
-				font-size: 12px;
-				font-weight: bold;
-			}
-			.status-blocked {
-				background: #fee2e2;
-				color: #991b1b;
-				padding: 4px 8px;
-				border-radius: 4px;
-				font-size: 12px;
-				font-weight: bold;
-			}
+	width: 100%;
+	border-collapse: collapse;
+	margin-top: 10px;
+}
+.admin-table th, .admin-table td {
+	padding: 12px 15px;
+	text-align: left;
+	border-bottom: 1px solid var(--border);
+	font-size: 14px;
+	vertical-align: middle;
+}
+.admin-table th {
+	background-color: #f8fafc;
+	color: var(--dark);
+	font-weight: 600;
+}
+.admin-table tr:hover {
+	background-color: #f1f5f9;
+}
+.admin-role-badge {
+	background: #dcfce7;
+	color: #166534;
+	padding: 4px 8px;
+	border-radius: 4px;
+	font-size: 12px;
+	font-weight: bold;
+}
+.user-role-badge {
+	background: #e0f2fe;
+	color: #0369a1;
+	padding: 4px 8px;
+	border-radius: 4px;
+	font-size: 12px;
+	font-weight: bold;
+}
+
+.status-active {
+	background: #dcfce7;
+	color: #166534;
+	padding: 4px 8px;
+	border-radius: 4px;
+	font-size: 12px;
+	font-weight: bold;
+}
+.status-blocked {
+	background: #fee2e2;
+	color: #991b1b;
+	padding: 4px 8px;
+	border-radius: 4px;
+	font-size: 12px;
+	font-weight: bold;
+}
+
+.star-rating {
+	font-size: 32px;
+	display: inline-block;
+	cursor: pointer;
+}
+.star {
+	color: #cbd5e1;
+	transition: color 0.15s ease-in-out;
+	margin: 0 3px;
+	user-select: none;
+}
+.star:hover,
+.star.active {
+	color: #f59e0b;
+}

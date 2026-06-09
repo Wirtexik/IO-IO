@@ -133,10 +133,15 @@ app.delete('/api/wishlist/:id', (req, res) => {
 });
 
 app.get('/api/auctions', (req, res) => {
-	const { search, category, condition } = req.query;
+	const { search, category, condition, currentUser } = req.query;
 
 	let zapytanie = 'SELECT * FROM Ksiazki WHERE 1=1';
 	const parametry = [];
+
+	if (currentUser) {
+		zapytanie += ' AND wlasciciel != ?';
+		parametry.push(currentUser);
+	}
 
 	if (search) {
 		zapytanie += ' AND (tytul LIKE ? OR autor LIKE ?)';
@@ -162,9 +167,19 @@ app.get('/api/auctions', (req, res) => {
 });
 
 app.get('/api/random-books', (req, res) => {
-	const zapytanie = 'SELECT * FROM Ksiazki ORDER BY RAND() LIMIT 3';
+	const { currentUser } = req.query;
 
-	connection.query(zapytanie, (blad, wiersze) => {
+	let zapytanie = 'SELECT * FROM Ksiazki';
+	const parametry = [];
+
+	if (currentUser) {
+		zapytanie += ' WHERE wlasciciel != ?';
+		parametry.push(currentUser);
+	}
+
+	zapytanie += ' ORDER BY RAND() LIMIT 3';
+
+	connection.query(zapytanie, parametry, (blad, wiersze) => {
 		if (blad) return res.status(500).json({ error: blad.message });
 		res.json({ books: wiersze });
 	});
@@ -217,8 +232,15 @@ app.post('/api/login', (req, res) => {
 app.get('/api/profile', (req, res) => {
 	const loginKonta = req.query.user;
 
-	const zapytanie =
-		'SELECT email, imie, nazwisko, telefon, miasto, kod_pocztowy, opis FROM konta WHERE login = ?';
+	const zapytanie = `
+        SELECT k.email, k.imie, k.nazwisko, k.telefon, k.miasto, k.kod_pocztowy, k.opis,
+               IFNULL(AVG(o.ocena), 0) AS srednia_ocen, COUNT(o.id) AS liczba_ocen
+        FROM konta k
+        LEFT JOIN opinie o ON k.login = o.oceniany
+        WHERE k.login = ?
+        GROUP BY k.login
+    `;
+
 	connection.query(zapytanie, [loginKonta], (blad, wiersze) => {
 		if (blad) return res.status(500).json({ error: blad.message });
 		if (wiersze.length === 0)
@@ -327,11 +349,6 @@ app.put('/api/admin/toggle-block', (req, res) => {
 	});
 });
 
-// ==========================================
-// ADMIN: ZARZĄDZANIE TRANSAKCJAMI (WYMIANY)
-// ==========================================
-
-// Pobieranie wszystkich wymian
 app.get('/api/admin/wymiany', (req, res) => {
 	const zapytanie = 'SELECT * FROM wymiany ORDER BY data_utworzenia DESC';
 	connection.query(zapytanie, (blad, wiersze) => {
@@ -340,7 +357,6 @@ app.get('/api/admin/wymiany', (req, res) => {
 	});
 });
 
-// Blokowanie / Zmiana statusu wymiany
 app.put('/api/admin/wymiany/:id/status', (req, res) => {
 	const idWymiany = req.params.id;
 	const { status } = req.body;
@@ -352,18 +368,15 @@ app.put('/api/admin/wymiany/:id/status', (req, res) => {
 	});
 });
 
-// Całkowite usuwanie wymiany z bazy
 app.delete('/api/admin/wymiany/:id', (req, res) => {
 	const idWymiany = req.params.id;
 
-	const zapytanie = 'DELETE FROM wymiany WHERE id = ?';
+	const zapytanie = "UPDATE wymiany SET status = 'odrzucona' WHERE id = ?";
 	connection.query(zapytanie, [idWymiany], (blad, wynik) => {
 		if (blad) return res.status(500).json({ error: blad.message });
-		res.json({ message: 'Transakcja została trwale usunięta z systemu.' });
+		res.json({ message: 'Transakcja została odrzucona (usunięta przez admina).' });
 	});
 });
-
-//===================
 
 app.post('/api/wymiany', (req, res) => {
 	const { id_ksiazki_oferowanej, id_ksiazki_zadanej, login_nadawcy } = req.body;
@@ -410,7 +423,6 @@ app.post('/api/wymiany', (req, res) => {
 		},
 	);
 });
-//wymiany historia
 
 app.get('/api/wymiany/historia', (req, res) => {
 	const { user } = req.query;
@@ -421,7 +433,7 @@ app.get('/api/wymiany/historia', (req, res) => {
                tytul_oferowanej, autor_oferowanej, tytul_zadanej, autor_zadanej
         FROM wymiany
         WHERE (login_nadawcy = ? OR login_odbiorcy = ?)
-        AND status IN ('zakonczona', 'odrzucona')
+        AND status IN ('zakonczona', 'odrzucona', 'zablokowana')
         ORDER BY data_utworzenia DESC
     `,
 		[user, user],
@@ -449,8 +461,6 @@ app.get('/api/wymiany', (req, res) => {
 		},
 	);
 });
-
-// logkia wymian id
 
 app.put('/api/wymiany/:id', (req, res) => {
 	const { status, login } = req.body;
@@ -503,7 +513,11 @@ app.put('/api/wymiany/:id', (req, res) => {
 											[idZadanej],
 											(blad5) => {
 												if (blad5) return res.json({ error: blad5.message });
-												res.json({ message: 'Gotowe' });
+												res.json({ 
+                                                    message: 'Gotowe', 
+                                                    id_wymiany: id, 
+                                                    oceniany: wymiana.login_nadawcy 
+                                                });
 											},
 										);
 									},
@@ -518,7 +532,33 @@ app.put('/api/wymiany/:id', (req, res) => {
 		},
 	);
 });
-// na koniec
+
+
+app.post('/api/opinie', (req, res) => {
+    const { id_wymiany, oceniajacy, oceniany, ocena, komentarz } = req.body;
+    
+
+    const zapytanieSprawdz = "SELECT * FROM opinie WHERE id_wymiany = ? AND oceniajacy = ?";
+    connection.query(zapytanieSprawdz, [id_wymiany, oceniajacy], (blad, wiersze) => {
+        if (blad) return res.json({error: blad.message});
+        if (wiersze.length > 0) return res.json({error: "Już wystawiłeś opinię za tę wymianę!"});
+
+        const zapytanieWstaw = "INSERT INTO opinie (id_wymiany, oceniajacy, oceniany, ocena, komentarz) VALUES (?, ?, ?, ?, ?)";
+        connection.query(zapytanieWstaw, [id_wymiany, oceniajacy, oceniany, ocena, komentarz], (bladWstaw) => {
+            if (bladWstaw) return res.json({error: bladWstaw.message});
+            res.json({message: "Opinia została pomyślnie dodana!"});
+        });
+    });
+});
+
+app.get('/api/opinie', (req, res) => {
+    const { user } = req.query;
+    const zapytanie = "SELECT * FROM opinie WHERE oceniany = ? ORDER BY data_dodania DESC";
+    connection.query(zapytanie, [user], (blad, wiersze) => {
+        if (blad) return res.json({error: blad.message});
+        res.json({opinie: wiersze});
+    });
+});
 
 app.listen(PORT, () => {
 	console.log(`Serwer dziala: http://localhost:${PORT}`);

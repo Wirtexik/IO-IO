@@ -16,9 +16,7 @@ document.addEventListener('DOMContentLoaded', () => {
 			const poleWyszukiwania = document.getElementById('home-search');
 			const poleKategorii = document.getElementById('home-category');
 
-			const wartoscWyszukiwania = poleWyszukiwania
-				? poleWyszukiwania.value
-				: '';
+			const wartoscWyszukiwania = poleWyszukiwania ? poleWyszukiwania.value : '';
 			const wartoscKategorii = poleKategorii ? poleKategorii.value : '';
 
 			const parametry = new URLSearchParams();
@@ -48,11 +46,8 @@ document.addEventListener('DOMContentLoaded', () => {
 			if (selectKategorii) selectKategorii.value = zapytanieKategoria;
 		}
 
-		// ZMIANA: Pobieramy wszystkie oferty ZAWSZE po wejściu w zakładkę Aukcje.
-		// Skrypt sam zaciągnie filtry (jeśli jakieś zostały wpisane), a jeśli są puste - pokaże wszystko.
 		pobierzAukcje();
 
-		// BONUS UX: Automatyczne szukanie po wciśnięciu klawisza "Enter" w polu wpisywania
 		const poleWyszukiwarki = document.getElementById('search-title');
 		if (poleWyszukiwarki) {
 			poleWyszukiwarki.addEventListener('keypress', (zdarzenie) => {
@@ -60,12 +55,44 @@ document.addEventListener('DOMContentLoaded', () => {
 			});
 		}
 
-		// BONUS UX: Automatyczne szukanie od razu po zmianie kategorii lub stanu z listy rozwijanej
 		const poleKategorii = document.getElementById('filter-category');
 		const poleStanu = document.getElementById('filter-condition');
 		if (poleKategorii) poleKategorii.addEventListener('change', pobierzAukcje);
 		if (poleStanu) poleStanu.addEventListener('change', pobierzAukcje);
 	}
+
+	const wyborDocelowy = document.getElementById('destination');
+	const poleIlosci = document.getElementById('ilosc');
+	if (wyborDocelowy && poleIlosci) {
+		wyborDocelowy.addEventListener('change', function () {
+			if (this.value === 'wishlist') {
+				poleIlosci.style.display = 'none';
+				poleIlosci.removeAttribute('required');
+			} else {
+				poleIlosci.style.display = 'block';
+				poleIlosci.setAttribute('required', 'required');
+			}
+		});
+	}
+
+	const gwiazdki = document.querySelectorAll('.star');
+	gwiazdki.forEach((gwiazdka) => {
+		gwiazdka.addEventListener('click', function () {
+			const wartosc = this.getAttribute('data-val');
+			document.getElementById('ratingWartosc').value = wartosc;
+			document.getElementById('wybranaOcenaTekst').textContent = `Wybrano: ${wartosc}/5`;
+
+			gwiazdki.forEach((g) => {
+				if (g.getAttribute('data-val') <= wartosc) {
+					g.classList.add('active');
+				} else {
+					g.classList.remove('active');
+				}
+			});
+		});
+	});
+
+	ustawNawigacjeLogowania();
 });
 
 function ustawNawigacjeLogowania() {
@@ -76,18 +103,23 @@ function ustawNawigacjeLogowania() {
 	let linkLogowania = null;
 
 	linkiNawigacji.forEach((link) => {
-		if (
-			link.getAttribute('href') === 'profil.html' ||
-			link.getAttribute('href') === 'zaloguj.html'
-		) {
-			linkLogowania = link;
+		const href = link.getAttribute('href');
+		if (href === 'profil.html' || href === 'zaloguj.html') {
+			if (link.getAttribute('id') !== 'nav-admin-link') {
+				linkLogowania = link;
+			}
 		}
 	});
 
 	if (zalogowanyUzytkownik && linkLogowania) {
-		linkLogowania.textContent = zalogowanyUzytkownik;
+		linkLogowania.textContent = 'Mój profil';
 		linkLogowania.setAttribute('href', 'profil.html');
-		linkLogowania.classList.remove('active-link');
+		
+		if (!window.location.pathname.includes('profil.html')) {
+			linkLogowania.classList.remove('active-link');
+		} else {
+			linkLogowania.classList.add('active-link');
+		}
 	}
 
 	if (rolaUzytkownika === 'Moderator' && kontenerLinkow) {
@@ -95,7 +127,7 @@ function ustawNawigacjeLogowania() {
 		if (!czyJestLinkAdmina && linkLogowania) {
 			const linkAdmina = document.createElement('a');
 			linkAdmina.href = 'admin.html';
-			linkAdmina.textContent = 'Panel admina';
+			linkAdmina.textContent = 'Panel administracyjny';
 			linkAdmina.style.color = '#ef4444';
 			kontenerLinkow.insertBefore(linkAdmina, linkLogowania);
 		}
@@ -134,6 +166,16 @@ function loadProfileData() {
 			const poleLokalizacji = document.getElementById('displayLocation');
 			const poleTelefonu = document.getElementById('displayPhone');
 			const poleEmail = document.getElementById('profileEmail');
+
+			const poleSredniej = document.getElementById('profileAvgRating');
+			const poleLiczbyOcen = document.getElementById('profileRatingCount');
+			
+			if (poleSredniej && dane.srednia_ocen !== undefined) {
+				poleSredniej.textContent = parseFloat(dane.srednia_ocen).toFixed(1);
+			}
+			if (poleLiczbyOcen && dane.liczba_ocen !== undefined) {
+				poleLiczbyOcen.textContent = dane.liczba_ocen;
+			}
 
 			if (poleEmail) poleEmail.textContent = dane.email || 'Brak e-maila';
 			if (poleLokalizacji) {
@@ -248,18 +290,53 @@ function closeAccountBlockedModal() {
 	if (oknoBlokady) oknoBlokady.style.display = 'none';
 }
 
+
+function zamknijOcenaPrompt() {
+	const modal = document.getElementById('ocenaPromptModal');
+	if (modal) modal.style.display = 'none';
+}
+
+function zamknijOcenaForm() {
+	const modal = document.getElementById('ocenaFormModal');
+	if (modal) modal.style.display = 'none';
+}
+
+function przejdzDoWystawianiaOceny() {
+	zamknijOcenaPrompt();
+	const modalForm = document.getElementById('ocenaFormModal');
+	const promptModal = document.getElementById('ocenaPromptModal');
+	
+
+	document.getElementById('ocenaOcenianyTytul').textContent = promptModal.dataset.oceniany;
+	modalForm.dataset.idWymiany = promptModal.dataset.idWymiany;
+	modalForm.dataset.oceniany = promptModal.dataset.oceniany;
+	
+	
+	document.getElementById('ratingWartosc').value = '0';
+	document.getElementById('wybranaOcenaTekst').textContent = 'Wybierz ocenę (1-5)';
+	document.getElementById('ratingKomentarz').value = '';
+	document.getElementById('statusOpinii').textContent = '';
+	document.querySelectorAll('.star').forEach(g => g.classList.remove('active'));
+	
+	modalForm.style.display = 'block';
+}
+
 window.onclick = function (zdarzenie) {
 	let modalKsiazki = document.getElementById('addBookModal');
 	let modalRejestracji = document.getElementById('registerSuccessModal');
 	let modalHasla = document.getElementById('changePasswordModal');
 	let modalBlokady = document.getElementById('accountBlockedModal');
 	let modalWymiany = document.getElementById('modalWymiany');
+	let modalOcenaP = document.getElementById('ocenaPromptModal');
+	let modalOcenaF = document.getElementById('ocenaFormModal');
 
 	if (zdarzenie.target == modalKsiazki) closeModal();
 	if (zdarzenie.target == modalRejestracji) closeRegisterSuccessModal();
 	if (zdarzenie.target == modalHasla) closePasswordModal();
 	if (zdarzenie.target == modalBlokady) closeAccountBlockedModal();
 	if (zdarzenie.target == modalWymiany) zamknijModalWymiany();
+	if (zdarzenie.target == modalOcenaP) zamknijOcenaPrompt();
+	if (zdarzenie.target == modalOcenaF) zamknijOcenaForm();
 };
 
 const formularzKsiazki = document.getElementById('addBookForm');
@@ -540,6 +617,7 @@ function usunZyczenie(idKsiazki) {
 			pobierzListeZyczen();
 		});
 }
+
 document.addEventListener('DOMContentLoaded', () => {
 	const zalogowanyUzytkownik = localStorage.getItem('zalogowanyUzytkownik');
 	const rolaUzytkownika = localStorage.getItem('rolaUzytkownika');
@@ -560,6 +638,7 @@ document.addEventListener('DOMContentLoaded', () => {
 			loadProfileData();
 			pobierzPrzychodzaceWymiany();
 			pobierzHistorieWymian();
+			pobierzOpinie(); 
 		}
 	}
 
@@ -574,6 +653,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		}
 	}
 });
+
 function switchAuthTab(nazwaZakladki) {
 	const zakladkiLogowania = document.querySelectorAll('.auth-tab');
 	const formularzLogowania = document.getElementById('login-form');
@@ -689,10 +769,14 @@ function pobierzAukcje() {
 		document.getElementById('filter-category')?.value || '';
 	const szukanyStan = document.getElementById('filter-condition')?.value || '';
 
+	const zalogowanyUzytkownik =
+		localStorage.getItem('zalogowanyUzytkownik') || '';
+
 	const parametryUrl = new URLSearchParams({
 		search: szukanyTytul,
 		category: szukanaKategoria,
 		condition: szukanyStan,
+		currentUser: zalogowanyUzytkownik,
 	});
 
 	fetch(`/api/auctions?${parametryUrl.toString()}`)
@@ -749,7 +833,13 @@ function pobierzLosoweKsiazki() {
 	const cialoLosowych = document.getElementById('randomBooksBody');
 	if (!cialoLosowych) return;
 
-	fetch('/api/random-books')
+	const zalogowanyUzytkownik =
+		localStorage.getItem('zalogowanyUzytkownik') || '';
+	const url = zalogowanyUzytkownik
+		? `/api/random-books?currentUser=${zalogowanyUzytkownik}`
+		: '/api/random-books';
+
+	fetch(url)
 		.then((odpowiedz) => odpowiedz.json())
 		.then((dane) => {
 			cialoLosowych.innerHTML = '';
@@ -796,6 +886,7 @@ function pobierzLosoweKsiazki() {
             `;
 		});
 }
+
 function pobierzKsiazkiDlaAdmina() {
 	const cialoAdminKsiazek = document.getElementById('adminBooksBody');
 	const licznikAdminKsiazek = document.getElementById('adminBooksCount');
@@ -964,8 +1055,6 @@ function adminZmienStatusBlokady(loginKonta, czyZablokowane) {
 		.catch((blad) => console.error('Błąd zmiany statusu blokady:', blad));
 }
 
-//========================
-
 function otworzModalWymiany(idZadanejKsiazki, loginOdbiorcy) {
 	const zalogowanyUzytkownik = localStorage.getItem('zalogowanyUzytkownik');
 	if (!zalogowanyUzytkownik) {
@@ -1084,18 +1173,25 @@ function odpowiedzNaWymiane(idWymiany, status) {
 				alert('❌ ' + dane.error);
 				return;
 			}
-			alert(
-				status === 'zaakceptowana'
-					? '✅ Wymiana zaakceptowana! Książki zostały usunięte z oferty.'
-					: 'Wymiana odrzucona.',
-			);
+			
 			pobierzPrzychodzaceWymiany();
 			pobierzKsiazki();
 			pobierzHistorieWymian();
+
+			if (status === 'zaakceptowana' && dane.id_wymiany && dane.oceniany) {
+				const promptModal = document.getElementById('ocenaPromptModal');
+				if(promptModal) {
+					document.getElementById('ocenaOcenianyTekst').textContent = dane.oceniany;
+					promptModal.dataset.idWymiany = dane.id_wymiany;
+					promptModal.dataset.oceniany = dane.oceniany;
+					promptModal.style.display = 'block';
+				}
+			} else if (status === 'odrzucona') {
+				alert('Wymiana odrzucona.');
+			}
 		});
 }
 
-// historia wymian
 function pobierzHistorieWymian() {
 	const kontener = document.getElementById('historiaCont');
 	if (!kontener) return;
@@ -1113,10 +1209,17 @@ function pobierzHistorieWymian() {
 			dane.historia.forEach((w) => {
 				const czyNadawca = w.login_nadawcy === user;
 				const drugaStrona = czyNadawca ? w.login_odbiorcy : w.login_nadawcy;
-				const etykietaStatusu =
-					w.status === 'zakonczona'
-						? '<span class="status-badge available">✓ Zakończona</span>'
-						: '<span class="status-badge" style="background:#fee2e2;color:#dc2626;">✗ Odrzucona</span>';
+				let etykietaStatusu = '';
+				if (w.status === 'zakonczona') {
+					etykietaStatusu =
+						'<span class="status-badge available">✓ Zakończona</span>';
+				} else if (w.status === 'odrzucona') {
+					etykietaStatusu =
+						'<span class="status-badge" style="background:#fee2e2;color:#dc2626;">✗ Odrzucona</span>';
+				} else if (w.status === 'zablokowana') {
+					etykietaStatusu =
+						'<span class="status-badge" style="background:#fef08a;color:#9a3412;">⚠️ Zablokowana</span>';
+				}
 
 				kontener.innerHTML += `
                     <div class="book-item">
@@ -1133,10 +1236,6 @@ function pobierzHistorieWymian() {
 			});
 		});
 }
-
-// ==========================================
-// FUNKCJE PANELU ADMINA - TRANSAKCJE
-// ==========================================
 
 function pobierzWymianyDlaAdmina() {
 	const cialoAdminWymiany = document.getElementById('adminWymianyBody');
@@ -1165,7 +1264,6 @@ function pobierzWymianyDlaAdmina() {
 					wymiana.data_utworzenia,
 				).toLocaleDateString('pl-PL');
 
-				// Formatowanie estetycznych etykiet dla statusu
 				let etykietaStatusu = '';
 				if (wymiana.status === 'oczekuje')
 					etykietaStatusu =
@@ -1181,12 +1279,11 @@ function pobierzWymianyDlaAdmina() {
 				else
 					etykietaStatusu = `<span class="status-badge">${wymiana.status}</span>`;
 
-				// Logika przycisku Blokuj/Odblokuj
 				let zablokujBtn = '';
 				if (wymiana.status !== 'zablokowana') {
 					zablokujBtn = `<button class="btn-outline btn-sec-action" style="padding: 4px 8px; font-size: 12px; margin: 0;" onclick="adminZmienStatusWymiany(${wymiana.id}, 'zablokowana')">Zablokuj</button>`;
 				} else {
-					zablokujBtn = `<button class="btn-success btn-sec-action" style="padding: 4px 8px; font-size: 12px; margin: 0;" onclick="adminZmienStatusWymiany(${wymiana.id}, 'odrzucona')">Odblokuj (Odrzuć)</button>`;
+					zablokujBtn = `<button class="btn-success btn-sec-action" style="padding: 4px 8px; font-size: 12px; margin: 0;" onclick="adminZmienStatusWymiany(${wymiana.id}, 'oczekuje')">Odblokuj</button>`;
 				}
 
 				cialoAdminWymiany.innerHTML += `
@@ -1214,12 +1311,9 @@ function pobierzWymianyDlaAdmina() {
 }
 
 function adminZmienStatusWymiany(idWymiany, nowyStatus) {
-	if (
-		!confirm(
-			`Czy na pewno chcesz zmienić status tej transakcji na: ${nowyStatus.toUpperCase()}? (Opcja zablokuj uniemożliwia realizację akcji)`,
-		)
-	)
-		return;
+	let msg = `Czy na pewno chcesz zmienić status tej transakcji na: ${nowyStatus.toUpperCase()}?`;
+	if (nowyStatus === 'zablokowana') msg += ' (Zablokuje to możliwość jej akceptacji)';
+	if (!confirm(msg)) return;
 
 	fetch(`/api/admin/wymiany/${idWymiany}/status`, {
 		method: 'PUT',
@@ -1236,7 +1330,7 @@ function adminZmienStatusWymiany(idWymiany, nowyStatus) {
 function adminUsunWymiane(idWymiany) {
 	if (
 		!confirm(
-			'UWAGA: Czy na pewno chcesz trwale usunąć tę transakcję z bazy danych? Ta akcja jest nieodwracalna.',
+			'UWAGA: Czy na pewno chcesz usunąć tę transakcję? Zostanie ona oznaczona jako ODRZUCONA dla użytkowników.',
 		)
 	)
 		return;
@@ -1247,4 +1341,89 @@ function adminUsunWymiane(idWymiany) {
 			if (dane.error) alert('Błąd: ' + dane.error);
 			else pobierzWymianyDlaAdmina();
 		});
+}
+
+function wyslijOpinie() {
+	const zalogowanyUzytkownik = localStorage.getItem('zalogowanyUzytkownik');
+	const modalForm = document.getElementById('ocenaFormModal');
+	const idWymiany = modalForm.dataset.idWymiany;
+	const oceniany = modalForm.dataset.oceniany;
+	const ocena = document.getElementById('ratingWartosc').value;
+	const komentarz = document.getElementById('ratingKomentarz').value;
+	const statusDiv = document.getElementById('statusOpinii');
+
+	if (ocena === '0' || ocena === 0) {
+		statusDiv.textContent = '❌ Musisz wybrać od 1 do 5 gwiazdek!';
+		statusDiv.style.color = '#dc2626';
+		return;
+	}
+
+	fetch('/api/opinie', {
+		method: 'POST',
+		headers: { 'Content-Type': 'application/json' },
+		body: JSON.stringify({
+			id_wymiany: idWymiany,
+			oceniajacy: zalogowanyUzytkownik,
+			oceniany: oceniany,
+			ocena: ocena,
+			komentarz: komentarz
+		})
+	})
+	.then(r => r.json())
+	.then(dane => {
+		if (dane.error) {
+			statusDiv.textContent = '❌ ' + dane.error;
+			statusDiv.style.color = '#dc2626';
+		} else {
+			statusDiv.textContent = '✅ ' + dane.message;
+			statusDiv.style.color = '#10b981';
+			pobierzOpinie();
+			loadProfileData(); 
+			setTimeout(zamknijOcenaForm, 1500);
+		}
+	})
+	.catch(blad => {
+		statusDiv.textContent = '❌ Błąd połączenia z serwerem.';
+		statusDiv.style.color = '#dc2626';
+	});
+}
+
+function pobierzOpinie() {
+	const kontener = document.getElementById('opinieCont');
+	if (!kontener) return;
+	const user = localStorage.getItem('zalogowanyUzytkownik');
+
+	fetch(`/api/opinie?user=${user}`)
+		.then(r => r.json())
+		.then(dane => {
+			kontener.innerHTML = '';
+			if (dane.opinie.length === 0) {
+				kontener.innerHTML = '<p class="text-muted-padded">Nie masz jeszcze żadnych opinii od innych użytkowników.</p>';
+				return;
+			}
+			
+			dane.opinie.forEach(o => {
+				let gwiazdkiHTML = '';
+				for (let i = 1; i <= 5; i++) {
+					gwiazdkiHTML += `<span style="color: ${i <= o.ocena ? '#f59e0b' : '#cbd5e1'}; font-size:18px;">★</span>`;
+				}
+				
+				const dataDodania = new Date(o.data_dodania).toLocaleDateString('pl-PL');
+				const tekstKomentarza = o.komentarz ? `"${o.komentarz}"` : 'Brak komentarza pisemnego.';
+				
+				kontener.innerHTML += `
+					<div class="book-item" style="border-left: 4px solid #f59e0b;">
+						<div class="book-item-info" style="width: 100%;">
+							<div style="display:flex; justify-content:space-between; align-items:center;">
+								<h4>👤 <strong>${o.oceniajacy}</strong></h4>
+								<div>${gwiazdkiHTML}</div>
+							</div>
+							<p style="margin-top: 10px; font-style: italic; color: #475569;">${tekstKomentarza}</p>
+							<p style="font-size:11px; color:#94a3b8; margin-top:8px;">Wystawiono: ${dataDodania}</p>
+						</div>
+					</div>
+				`;
+			});
+		})
+		.catch(blad => console.error('Błąd pobierania opinii:', blad));
 }

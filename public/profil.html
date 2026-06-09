@@ -47,7 +47,12 @@
 								<span id="profileEmail">brak.emailu@email.com</span>
 							</p>
 							<p id="displayPhone"><span>📱</span> Brak numeru telefonu</p>
-							<p><span class="badge verified">✓ Zweryfikowany</span></p>
+							
+							<p id="displayRating" style="margin-top: 8px; font-weight: 600; color: #475569;">
+								<span style="color: #f59e0b; font-size: 18px;">⭐</span> 
+								<span id="profileAvgRating" style="color: #0f172a; font-size: 16px;">0.0</span>/5 
+								<span style="font-size: 13px; font-weight: normal;">(<span id="profileRatingCount">0</span> opinii)</span>
+							</p>
 
 							<div class="stats-grid">
 								<div class="stat-box">
@@ -71,10 +76,13 @@
 						❤️ Lista życzeń
 					</button>
 					<button class="tab-button" onclick="switchTab('wymiany', event)">
-						🔄 Propozycje wymiany
+						🔄 Propozycje
 					</button>
 					<button class="tab-button" onclick="switchTab('historia', event)">
-						📋 Historia wymian
+						📋 Historia
+					</button>
+					<button class="tab-button" onclick="switchTab('opinie', event)">
+						⭐ Opinie
 					</button>
 					<button class="tab-button" onclick="switchTab('settings', event)">
 						⚙️ Ustawienia
@@ -130,6 +138,16 @@
 							<h3 class="profile-tab-title">Historia wymian</h3>
 						</div>
 						<div id="historiaCont"></div>
+					</div>
+				</div>
+
+				<div id="tab-opinie" class="tab-content">
+					<div class="profile-card">
+						<div class="profile-tab-header">
+							<h3 class="profile-tab-title">Opinie innych użytkowników</h3>
+						</div>
+						<div id="opinieCont">
+							</div>
 					</div>
 				</div>
 
@@ -219,13 +237,7 @@
 					<h3 class="profile-tab-title">Dodaj nową książkę</h3>
 					<form id="addBookForm" class="modal-form" style="margin-top: 15px">
 						<input type="hidden" id="destination" value="shelf" />
-
-						<input
-							type="text"
-							id="tytul"
-							placeholder="Tytuł książki"
-							required
-						/>
+						<input type="text" id="tytul" placeholder="Tytuł książki" required />
 						<input type="text" id="autor" placeholder="Autor" required />
 						<select id="kategoria" required>
 							<option value="">Wybierz kategorię</option>
@@ -247,10 +259,7 @@
 						<button type="submit" class="btn-primary w-100">
 							Dodaj książkę
 						</button>
-						<div
-							id="addStatus"
-							style="text-align: center; margin-top: 10px"
-						></div>
+						<div id="addStatus" style="text-align: center; margin-top: 10px"></div>
 					</form>
 				</div>
 			</div>
@@ -259,40 +268,18 @@
 				<div class="modal-content">
 					<span class="close" onclick="closePasswordModal()">&times;</span>
 					<h3 class="profile-tab-title">Zmień hasło</h3>
-					<form
-						id="changePasswordForm"
-						class="modal-form"
-						style="margin-top: 15px"
-					>
-						<input
-							type="password"
-							id="old-password"
-							placeholder="Aktualne hasło"
-							required
-						/>
-						<input
-							type="password"
-							id="new-password"
-							placeholder="Nowe hasło"
-							required
-						/>
-						<input
-							type="password"
-							id="new-password-confirm"
-							placeholder="Powtórz nowe hasło"
-							required
-						/>
+					<form id="changePasswordForm" class="modal-form" style="margin-top: 15px">
+						<input type="password" id="old-password" placeholder="Aktualne hasło" required />
+						<input type="password" id="new-password" placeholder="Nowe hasło" required />
+						<input type="password" id="new-password-confirm" placeholder="Powtórz nowe hasło" required />
 						<button type="submit" class="btn-primary w-100 mt-10">
 							Zmień hasło
 						</button>
-						<div
-							id="passwordStatus"
-							class="error-msg"
-							style="display: block; text-align: center; margin-top: 10px"
-						></div>
+						<div id="passwordStatus" class="error-msg" style="display: block; text-align: center; margin-top: 10px"></div>
 					</form>
 				</div>
 			</div>
+
 			<div id="modalWymiany" class="modal">
 				<div class="modal-content">
 					<span class="close" onclick="zamknijModalWymiany()">&times;</span>
@@ -300,27 +287,58 @@
 					<p style="color: #64748b; margin: 10px 0 15px">
 						Wybierz jedną ze swoich książek, którą zaoferujesz w zamian:
 					</p>
-					<select
-						id="wymianaPropozycja"
-						style="
-							width: 100%;
-							padding: 10px;
-							border: 1px solid #e2e8f0;
-							border-radius: 8px;
-							margin-bottom: 12px;
-						"
-					>
+					<select id="wymianaPropozycja" style="width: 100%; padding: 10px; border: 1px solid #e2e8f0; border-radius: 8px; margin-bottom: 12px;">
 						<option value="">Ładowanie...</option>
 					</select>
 					<button class="btn-success w-100" onclick="wyslijOferte()">
 						Wyślij propozycję
 					</button>
-					<div
-						id="statusWymiany"
-						style="text-align: center; margin-top: 10px"
-					></div>
+					<div id="statusWymiany" style="text-align: center; margin-top: 10px"></div>
 				</div>
 			</div>
+
+			<div id="ocenaPromptModal" class="modal">
+				<div class="modal-content modal-sm">
+					<span class="close" onclick="zamknijOcenaPrompt()">&times;</span>
+					<h3 class="text-success-lg">Wymiana zakończona!</h3>
+					<p class="text-muted-mb">
+						Transakcja z użytkownikiem <strong id="ocenaOcenianyTekst"></strong> przebiegła pomyślnie. Czy chcesz wystawić mu opinię?
+					</p>
+					<div style="display: flex; gap: 10px;">
+						<button class="btn-outline w-100" onclick="zamknijOcenaPrompt()">Pomiń</button>
+						<button class="btn-success w-100" onclick="przejdzDoWystawianiaOceny()">Wystaw</button>
+					</div>
+				</div>
+			</div>
+
+			<div id="ocenaFormModal" class="modal">
+				<div class="modal-content">
+					<span class="close" onclick="zamknijOcenaForm()">&times;</span>
+					<h3 class="profile-tab-title">Oceń użytkownika <span id="ocenaOcenianyTytul" style="color: #5c55e9;"></span></h3>
+					
+					<div class="modal-form" style="margin-top: 15px">
+						<div style="text-align: center; margin-bottom: 10px;">
+							<div class="star-rating" id="starContainer">
+								<span class="star" data-val="1">★</span>
+								<span class="star" data-val="2">★</span>
+								<span class="star" data-val="3">★</span>
+								<span class="star" data-val="4">★</span>
+								<span class="star" data-val="5">★</span>
+							</div>
+							<p id="wybranaOcenaTekst" style="font-size: 13px; color: #64748b; margin-top: 5px;">Wybierz ocenę (1-5)</p>
+						</div>
+						
+						<input type="hidden" id="ratingWartosc" value="0">
+						<textarea id="ratingKomentarz" placeholder="Napisz kilka słów o tej transakcji (np. Szybka wymiana, książka w super stanie)..." style="padding: 12px; border: 1px solid var(--border); border-radius: 6px; font-family: inherit; font-size: 14px; resize: vertical; min-height: 80px; width: 100%;"></textarea>
+						
+						<button class="btn-primary w-100 mt-10" onclick="wyslijOpinie()">
+							Zapisz opinię
+						</button>
+						<div id="statusOpinii" style="text-align: center; margin-top: 10px"></div>
+					</div>
+				</div>
+			</div>
+
 		</main>
 
 		<footer>
