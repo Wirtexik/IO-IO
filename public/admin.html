@@ -16,6 +16,7 @@
 			<div class="nav-links">
 				<a href="index.html">Strona główna</a>
 				<a href="shelf.html">Moja półka</a>
+				<a href="aukcje.html">Aukcje</a>
 				<a href="admin.html" class="active-link" id="nav-admin-link"
 					>Panel administracyjny</a
 				>
@@ -53,14 +54,19 @@
 					>
 						🔄 Transakcje (Wymiany)
 					</button>
+					<button
+						class="tab-button"
+						onclick="switchTab('admin-opinie', event)"
+					>
+						⭐ Wszystkie Opinie
+					</button>
 				</div>
 
 				<div id="tab-admin-books" class="tab-content active">
 					<div class="profile-card">
 						<div class="profile-tab-header">
 							<h3 class="profile-tab-title">
-								Wszystkie książki w systemie (<span id="adminBooksCount">0</span
-								>)
+								Wszystkie książki w systemie (<span id="adminBooksCount">0</span>)
 							</h3>
 						</div>
 						<div style="overflow-x: auto">
@@ -118,6 +124,7 @@
 						</div>
 					</div>
 				</div>
+
 				<div id="tab-admin-wymiany" class="tab-content">
 					<div class="profile-card">
 						<div class="profile-tab-header">
@@ -152,6 +159,40 @@
 						</div>
 					</div>
 				</div>
+
+				<div id="tab-admin-opinie" class="tab-content">
+					<div class="profile-card">
+						<div class="profile-tab-header">
+							<h3 class="profile-tab-title">
+								Wszystkie opinie w systemie (<span id="adminOpinieCount">0</span>)
+							</h3>
+						</div>
+						<div style="overflow-x: auto">
+							<table class="admin-table">
+								<thead>
+									<tr>
+										<th>ID</th>
+										<th>Wymiana</th>
+										<th>Oceniający</th>
+										<th>Oceniany</th>
+										<th>Ocena</th>
+										<th>Komentarz</th>
+										<th>Data dodania</th>
+										<th>Akcje</th>
+									</tr>
+								</thead>
+								<tbody id="adminOpinieBody">
+									<tr>
+										<td colspan="8" style="text-align: center">
+											Ładowanie danych...
+										</td>
+									</tr>
+								</tbody>
+							</table>
+						</div>
+					</div>
+				</div>
+
 			</div>
 		</main>
 

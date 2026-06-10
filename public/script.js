@@ -290,7 +290,6 @@ function closeAccountBlockedModal() {
 	if (oknoBlokady) oknoBlokady.style.display = 'none';
 }
 
-
 function zamknijOcenaPrompt() {
 	const modal = document.getElementById('ocenaPromptModal');
 	if (modal) modal.style.display = 'none';
@@ -650,6 +649,7 @@ document.addEventListener('DOMContentLoaded', () => {
 			pobierzKsiazkiDlaAdmina();
 			pobierzUzytkownikowDlaAdmina();
 			pobierzWymianyDlaAdmina();
+			pobierzOpinieDlaAdmina();
 		}
 	}
 });
@@ -797,6 +797,12 @@ function pobierzAukcje() {
 
 			dane.books.forEach((ksiazka) => {
 				const pierwszaLitera = ksiazka.tytul.charAt(0).toUpperCase();
+				
+				const ocenaWartosc = ksiazka.srednia_ocen ? parseFloat(ksiazka.srednia_ocen).toFixed(1) : 0;
+				const liczbaOcen = ksiazka.liczba_ocen || 0;
+				const ocenaHTML = liczbaOcen > 0 
+					? `<span style="color: #f59e0b; margin-left: 5px; font-weight: bold;" title="Średnia ocen użytkownika">⭐ ${ocenaWartosc} <span style="font-weight: normal; color: #64748b; font-size: 11px;">(${liczbaOcen})</span></span>` 
+					: `<span style="color: #94a3b8; margin-left: 5px; font-size: 11px;">(Brak ocen)</span>`;
 
 				cialoAukcji.innerHTML += `
              <div class="book-card">
@@ -806,9 +812,10 @@ function pobierzAukcje() {
                             <p style="color: #64748b; margin-bottom: 5px;">${ksiazka.autor}</p>
                             <p style="color: #10b981; font-weight: 600; font-size: 13px; margin-bottom: 10px;">Stan: ${ksiazka.stan}</p>
                             
-                            <div style="display: flex; align-items: center; gap: 5px; margin-bottom: 15px; font-size: 13px; color: #475569;">
-                                <span>👤 Wystawia:</span>
-                                <strong>${ksiazka.wlasciciel}</strong>
+                            <div style="display: flex; align-items: center; margin-bottom: 15px; font-size: 13px; color: #475569;">
+                                <span>👤 Wystawia: </span>
+                                <strong style="margin-left: 4px;">${ksiazka.wlasciciel}</strong>
+								${ocenaHTML}
                             </div>
 
                             <button class="btn-outline" onclick="otworzModalWymiany(${ksiazka.id}, '${ksiazka.wlasciciel}')">
@@ -856,6 +863,12 @@ function pobierzLosoweKsiazki() {
 			dane.books.forEach((ksiazka) => {
 				const pierwszaLitera = ksiazka.tytul.charAt(0).toUpperCase();
 
+				const ocenaWartosc = ksiazka.srednia_ocen ? parseFloat(ksiazka.srednia_ocen).toFixed(1) : 0;
+				const liczbaOcen = ksiazka.liczba_ocen || 0;
+				const ocenaHTML = liczbaOcen > 0 
+					? `<span style="color: #f59e0b; margin-left: 5px; font-weight: bold;" title="Średnia ocen użytkownika">⭐ ${ocenaWartosc} <span style="font-weight: normal; color: #64748b; font-size: 11px;">(${liczbaOcen})</span></span>` 
+					: `<span style="color: #94a3b8; margin-left: 5px; font-size: 11px;">(Brak ocen)</span>`;
+
 				cialoLosowych.innerHTML += `
                     <div class="book-card">
                         <div class="card-img">${pierwszaLitera}</div>
@@ -864,9 +877,10 @@ function pobierzLosoweKsiazki() {
                             <p style="color: #64748b; margin-bottom: 5px;">${ksiazka.autor}</p>
                             <p style="color: #10b981; font-weight: 600; font-size: 13px; margin-bottom: 10px;">Stan: ${ksiazka.stan}</p>
                             
-                            <div style="display: flex; align-items: center; gap: 5px; margin-bottom: 15px; font-size: 13px; color: #475569;">
-                                <span>👤 Wystawia:</span>
-                                <strong>${ksiazka.wlasciciel}</strong>
+                            <div style="display: flex; align-items: center; margin-bottom: 15px; font-size: 13px; color: #475569;">
+                                <span>👤 Wystawia: </span>
+                                <strong style="margin-left: 4px;">${ksiazka.wlasciciel}</strong>
+								${ocenaHTML}
                             </div>
 
                             <button class="btn-outline" onclick="otworzModalWymiany(${ksiazka.id}, '${ksiazka.wlasciciel}')">
@@ -1426,4 +1440,59 @@ function pobierzOpinie() {
 			});
 		})
 		.catch(blad => console.error('Błąd pobierania opinii:', blad));
+}
+
+function pobierzOpinieDlaAdmina() {
+	const cialoAdminOpinie = document.getElementById('adminOpinieBody');
+	const licznikAdminOpinie = document.getElementById('adminOpinieCount');
+	if (!cialoAdminOpinie) return;
+
+	fetch('/api/admin/opinie')
+		.then((odpowiedz) => odpowiedz.json())
+		.then((dane) => {
+			if (dane.error) {
+				cialoAdminOpinie.innerHTML = `<tr><td colspan="8" style="text-align:center;color:red;">Błąd: ${dane.error}</td></tr>`;
+				return;
+			}
+			if (licznikAdminOpinie) licznikAdminOpinie.textContent = dane.opinie.length;
+
+			cialoAdminOpinie.innerHTML = '';
+			if (dane.opinie.length === 0) {
+				cialoAdminOpinie.innerHTML = '<tr><td colspan="8" style="text-align:center;">Brak opinii w systemie.</td></tr>';
+				return;
+			}
+
+			dane.opinie.forEach((opinia) => {
+				const dataDodania = new Date(opinia.data_dodania).toLocaleDateString('pl-PL');
+				const komentarzSkrocony = opinia.komentarz ? (opinia.komentarz.length > 30 ? opinia.komentarz.substring(0, 30) + '...' : opinia.komentarz) : 'Brak komentarza';
+
+				cialoAdminOpinie.innerHTML += `
+					<tr>
+						<td>#${opinia.id}</td>
+						<td>#${opinia.id_wymiany}</td>
+						<td><strong>${opinia.oceniajacy}</strong></td>
+						<td><strong>${opinia.oceniany}</strong></td>
+						<td>⭐ ${opinia.ocena}/5</td>
+						<td title="${opinia.komentarz || ''}">${komentarzSkrocony}</td>
+						<td>${dataDodania}</td>
+						<td>
+							<button class="btn-danger-outline btn-sec-action" style="padding: 4px 8px; font-size: 12px; margin: 0;" onclick="adminUsunOpinie(${opinia.id})">Usuń</button>
+						</td>
+					</tr>
+				`;
+			});
+		})
+		.catch((blad) => console.error('Błąd pobierania opinii dla admina:', blad));
+}
+
+function adminUsunOpinie(idOpinii) {
+	if (!confirm('Czy na pewno chcesz trwale usunąć tę opinię z systemu?')) return;
+
+	fetch(`/api/admin/opinie/${idOpinii}`, { method: 'DELETE' })
+		.then((odpowiedz) => odpowiedz.json())
+		.then((dane) => {
+			if (dane.error) alert('Błąd: ' + dane.error);
+			else pobierzOpinieDlaAdmina();
+		})
+		.catch((blad) => console.error('Błąd usuwania opinii:', blad));
 }

@@ -7,35 +7,51 @@ const PORT = 3000;
 app.use(express.json());
 app.use(express.static('public'));
 
-const connection = mysql.createConnection({
+const initConnection = mysql.createConnection({
 	host: 'localhost',
 	user: 'root',
 	password: '',
 	multipleStatements: true,
 });
 
-connection.connect((blad) => {
-	if (blad) return console.error(blad.message);
+initConnection.connect((blad) => {
+	if (blad) return console.error('Błąd połączenia init:', blad.message);
 
-	connection.query(
+	initConnection.query(
 		'CREATE DATABASE IF NOT EXISTS instant_book_exchange',
 		(bladTworzenia) => {
 			if (bladTworzenia) return console.error(bladTworzenia.message);
 
-			connection.changeUser(
+			initConnection.changeUser(
 				{ database: 'instant_book_exchange' },
 				(bladZmiany) => {
 					if (bladZmiany) return console.error(bladZmiany.message);
 
 					const skryptInit = fs.readFileSync('./init.sql', 'utf8');
-					connection.query(skryptInit, (bladSkryptu) => {
-						if (bladSkryptu) console.error(bladSkryptu.message);
+					initConnection.query(skryptInit, (bladSkryptu) => {
+						if (bladSkryptu) console.error('Błąd init.sql:', bladSkryptu.message);
+						else console.log('Baza danych zainicjowana pomyślnie.');
+						initConnection.end();
 					});
 				},
 			);
 		},
 	);
 });
+
+const pool = mysql.createPool({
+	host: 'localhost',
+	user: 'root',
+	password: '',
+	database: 'instant_book_exchange',
+	waitForConnections: true,
+	connectionLimit: 10,
+	queueLimit: 0,
+});
+
+const connection = {
+	query: (...args) => pool.query(...args),
+};
 
 app.get('/api/test-books', (req, res) => {
 	const uzytkownik = req.query.user;
@@ -70,48 +86,41 @@ app.post('/api/books', (req, res) => {
 			.json({ error: 'Musisz być zalogowany, aby dodać książkę!' });
 	}
 
-	const zapytanieMaxId = `SELECT MAX(id) AS najwyzszeId FROM ${nazwaTabeli}`;
-	connection.query(zapytanieMaxId, (blad, wiersze) => {
-		if (blad) return res.status(500).json({ error: blad.message });
-
-		const noweId = (wiersze[0].najwyzszeId || 0) + 1;
-
-		if (czyListaZyczen) {
-			const zapytanieWstaw =
-				'INSERT INTO wishlist (id, tytul, autor, kategoria, stan, wlasciciel) VALUES (?, ?, ?, ?, ?, ?)';
-			connection.query(
-				zapytanieWstaw,
-				[noweId, tytul, autor, kategoria, stan, wlasciciel],
-				(bladWstawiania, wynik) => {
-					if (bladWstawiania) {
-						if (bladWstawiania.code === 'ER_DUP_ENTRY')
-							return res.status(400).json({
-								error: 'Książka o tym tytule już istnieje w liście życzeń!',
-							});
-						return res.status(500).json({ error: bladWstawiania.message });
-					}
-					res.json({ message: 'Dodano książkę do listy życzeń!' });
-				},
-			);
-		} else {
-			const zapytanieWstaw =
-				'INSERT INTO Ksiazki (id, tytul, autor, kategoria, stan, wlasciciel) VALUES (?, ?, ?, ?, ?, ?)';
-			connection.query(
-				zapytanieWstaw,
-				[noweId, tytul, autor, kategoria, stan, wlasciciel],
-				(bladWstawiania, wynik) => {
-					if (bladWstawiania) {
-						if (bladWstawiania.code === 'ER_DUP_ENTRY')
-							return res
-								.status(400)
-								.json({ error: 'Książka o tym tytule już istnieje na półce!' });
-						return res.status(500).json({ error: bladWstawiania.message });
-					}
-					res.json({ message: 'Dodano książkę do półki ofert!' });
-				},
-			);
-		}
-	});
+	if (czyListaZyczen) {
+		const zapytanieWstaw =
+			'INSERT INTO wishlist (tytul, autor, kategoria, stan, wlasciciel) VALUES (?, ?, ?, ?, ?)';
+		connection.query(
+			zapytanieWstaw,
+			[tytul, autor, kategoria, stan, wlasciciel],
+			(bladWstawiania) => {
+				if (bladWstawiania) {
+					if (bladWstawiania.code === 'ER_DUP_ENTRY')
+						return res.status(400).json({
+							error: 'Książka o tym tytule już istnieje w liście życzeń!',
+						});
+					return res.status(500).json({ error: bladWstawiania.message });
+				}
+				res.json({ message: 'Dodano książkę do listy życzeń!' });
+			},
+		);
+	} else {
+		const zapytanieWstaw =
+			'INSERT INTO Ksiazki (tytul, autor, kategoria, stan, wlasciciel) VALUES (?, ?, ?, ?, ?)';
+		connection.query(
+			zapytanieWstaw,
+			[tytul, autor, kategoria, stan, wlasciciel],
+			(bladWstawiania) => {
+				if (bladWstawiania) {
+					if (bladWstawiania.code === 'ER_DUP_ENTRY')
+						return res
+							.status(400)
+							.json({ error: 'Książka o tym tytule już istnieje na półce!' });
+					return res.status(500).json({ error: bladWstawiania.message });
+				}
+				res.json({ message: 'Dodano książkę do półki ofert!' });
+			},
+		);
+	}
 });
 
 app.delete('/api/books/:id', (req, res) => {
@@ -135,30 +144,35 @@ app.delete('/api/wishlist/:id', (req, res) => {
 app.get('/api/auctions', (req, res) => {
 	const { search, category, condition, currentUser } = req.query;
 
-	let zapytanie = 'SELECT * FROM Ksiazki WHERE 1=1';
+	let zapytanie = `
+		SELECT k.*, IFNULL(AVG(o.ocena), 0) AS srednia_ocen, COUNT(o.id) AS liczba_ocen
+		FROM Ksiazki k
+		LEFT JOIN opinie o ON k.wlasciciel = o.oceniany
+		WHERE 1=1
+	`;
 	const parametry = [];
 
 	if (currentUser) {
-		zapytanie += ' AND wlasciciel != ?';
+		zapytanie += ' AND k.wlasciciel != ?';
 		parametry.push(currentUser);
 	}
 
 	if (search) {
-		zapytanie += ' AND (tytul LIKE ? OR autor LIKE ?)';
+		zapytanie += ' AND (k.tytul LIKE ? OR k.autor LIKE ?)';
 		parametry.push(`%${search}%`, `%${search}%`);
 	}
 
 	if (category) {
-		zapytanie += ' AND kategoria = ?';
+		zapytanie += ' AND k.kategoria = ?';
 		parametry.push(category);
 	}
 
 	if (condition) {
-		zapytanie += ' AND stan = ?';
+		zapytanie += ' AND k.stan = ?';
 		parametry.push(condition);
 	}
 
-	zapytanie += ' ORDER BY id DESC';
+	zapytanie += ' GROUP BY k.id ORDER BY k.id DESC';
 
 	connection.query(zapytanie, parametry, (blad, wiersze) => {
 		if (blad) return res.status(500).json({ error: blad.message });
@@ -169,15 +183,19 @@ app.get('/api/auctions', (req, res) => {
 app.get('/api/random-books', (req, res) => {
 	const { currentUser } = req.query;
 
-	let zapytanie = 'SELECT * FROM Ksiazki';
+	let zapytanie = `
+		SELECT k.*, IFNULL(AVG(o.ocena), 0) AS srednia_ocen, COUNT(o.id) AS liczba_ocen
+		FROM Ksiazki k
+		LEFT JOIN opinie o ON k.wlasciciel = o.oceniany
+	`;
 	const parametry = [];
 
 	if (currentUser) {
-		zapytanie += ' WHERE wlasciciel != ?';
+		zapytanie += ' WHERE k.wlasciciel != ?';
 		parametry.push(currentUser);
 	}
 
-	zapytanie += ' ORDER BY RAND() LIMIT 3';
+	zapytanie += ' GROUP BY k.id ORDER BY RAND() LIMIT 3';
 
 	connection.query(zapytanie, parametry, (blad, wiersze) => {
 		if (blad) return res.status(500).json({ error: blad.message });
@@ -319,6 +337,7 @@ app.delete('/api/delete-account/:user', (req, res) => {
 		});
 	});
 });
+
 app.get('/api/admin/books', (req, res) => {
 	const zapytanie = 'SELECT * FROM Ksiazki ORDER BY id DESC';
 	connection.query(zapytanie, (blad, wiersze) => {
@@ -326,6 +345,7 @@ app.get('/api/admin/books', (req, res) => {
 		res.json({ books: wiersze });
 	});
 });
+
 app.get('/api/admin/users', (req, res) => {
 	const zapytanie =
 		'SELECT id, login, email, typ_konta, miasto, czy_zablokowane FROM konta ORDER BY id DESC';
@@ -375,6 +395,23 @@ app.delete('/api/admin/wymiany/:id', (req, res) => {
 	connection.query(zapytanie, [idWymiany], (blad, wynik) => {
 		if (blad) return res.status(500).json({ error: blad.message });
 		res.json({ message: 'Transakcja została odrzucona (usunięta przez admina).' });
+	});
+});
+
+app.get('/api/admin/opinie', (req, res) => {
+	const zapytanie = 'SELECT * FROM opinie ORDER BY data_dodania DESC';
+	connection.query(zapytanie, (blad, wiersze) => {
+		if (blad) return res.status(500).json({ error: blad.message });
+		res.json({ opinie: wiersze });
+	});
+});
+
+app.delete('/api/admin/opinie/:id', (req, res) => {
+	const idOpinii = req.params.id;
+	const zapytanie = 'DELETE FROM opinie WHERE id = ?';
+	connection.query(zapytanie, [idOpinii], (blad, wynik) => {
+		if (blad) return res.status(500).json({ error: blad.message });
+		res.json({ message: 'Opinia została pomyślnie usunięta przez administratora.' });
 	});
 });
 
@@ -489,39 +526,44 @@ app.put('/api/wymiany/:id', (req, res) => {
 					if (blad2) return res.json({ error: blad2.message });
 
 					if (nowyStatus === 'zakonczona') {
-						connection.query(
-							'UPDATE wymiany SET status = ? WHERE id != ? AND status = ? AND (id_ksiazki_oferowanej IN (?, ?) OR id_ksiazki_zadanej IN (?, ?))',
-							[
-								'odrzucona',
-								id,
-								'oczekuje',
-								idOferowanej,
-								idZadanej,
-								idOferowanej,
-								idZadanej,
-							],
-							(blad3) => {
-								if (blad3) return res.json({ error: blad3.message });
+						const idsDoSprawdzenia = [idOferowanej, idZadanej].filter(
+							(x) => x != null,
+						);
 
+						const wykonajUsuniecie = () => {
+							const usunKsiazke = (idKsiazki, callback) => {
+								if (idKsiazki == null) return callback(null);
 								connection.query(
 									'DELETE FROM Ksiazki WHERE id = ?',
-									[idOferowanej],
-									(blad4) => {
-										if (blad4) return res.json({ error: blad4.message });
-										connection.query(
-											'DELETE FROM Ksiazki WHERE id = ?',
-											[idZadanej],
-											(blad5) => {
-												if (blad5) return res.json({ error: blad5.message });
-												res.json({ 
-                                                    message: 'Gotowe', 
-                                                    id_wymiany: id, 
-                                                    oceniany: wymiana.login_nadawcy 
-                                                });
-											},
-										);
-									},
+									[idKsiazki],
+									callback,
 								);
+							};
+
+							usunKsiazke(idOferowanej, (blad4) => {
+								if (blad4) return res.json({ error: blad4.message });
+								usunKsiazke(idZadanej, (blad5) => {
+									if (blad5) return res.json({ error: blad5.message });
+									res.json({
+										message: 'Gotowe',
+										id_wymiany: id,
+										oceniany: wymiana.login_nadawcy,
+									});
+								});
+							});
+						};
+
+						if (idsDoSprawdzenia.length === 0) {
+							return wykonajUsuniecie();
+						}
+
+						const placeholdery = idsDoSprawdzenia.map(() => '?').join(', ');
+						connection.query(
+							`UPDATE wymiany SET status = 'odrzucona' WHERE id != ? AND status = 'oczekuje' AND (id_ksiazki_oferowanej IN (${placeholdery}) OR id_ksiazki_zadanej IN (${placeholdery}))`,
+							[id, ...idsDoSprawdzenia, ...idsDoSprawdzenia],
+							(blad3) => {
+								if (blad3) return res.json({ error: blad3.message });
+								wykonajUsuniecie();
 							},
 						);
 					} else {
@@ -533,31 +575,29 @@ app.put('/api/wymiany/:id', (req, res) => {
 	);
 });
 
-
 app.post('/api/opinie', (req, res) => {
-    const { id_wymiany, oceniajacy, oceniany, ocena, komentarz } = req.body;
-    
+	const { id_wymiany, oceniajacy, oceniany, ocena, komentarz } = req.body;
 
-    const zapytanieSprawdz = "SELECT * FROM opinie WHERE id_wymiany = ? AND oceniajacy = ?";
-    connection.query(zapytanieSprawdz, [id_wymiany, oceniajacy], (blad, wiersze) => {
-        if (blad) return res.json({error: blad.message});
-        if (wiersze.length > 0) return res.json({error: "Już wystawiłeś opinię za tę wymianę!"});
+	const zapytanieSprawdz = "SELECT * FROM opinie WHERE id_wymiany = ? AND oceniajacy = ?";
+	connection.query(zapytanieSprawdz, [id_wymiany, oceniajacy], (blad, wiersze) => {
+		if (blad) return res.json({error: blad.message});
+		if (wiersze.length > 0) return res.json({error: "Już wystawiłeś opinię za tę wymianę!"});
 
-        const zapytanieWstaw = "INSERT INTO opinie (id_wymiany, oceniajacy, oceniany, ocena, komentarz) VALUES (?, ?, ?, ?, ?)";
-        connection.query(zapytanieWstaw, [id_wymiany, oceniajacy, oceniany, ocena, komentarz], (bladWstaw) => {
-            if (bladWstaw) return res.json({error: bladWstaw.message});
-            res.json({message: "Opinia została pomyślnie dodana!"});
-        });
-    });
+		const zapytanieWstaw = "INSERT INTO opinie (id_wymiany, oceniajacy, oceniany, ocena, komentarz) VALUES (?, ?, ?, ?, ?)";
+		connection.query(zapytanieWstaw, [id_wymiany, oceniajacy, oceniany, ocena, komentarz], (bladWstaw) => {
+			if (bladWstaw) return res.json({error: bladWstaw.message});
+			res.json({message: "Opinia została pomyślnie dodana!"});
+		});
+	});
 });
 
 app.get('/api/opinie', (req, res) => {
-    const { user } = req.query;
-    const zapytanie = "SELECT * FROM opinie WHERE oceniany = ? ORDER BY data_dodania DESC";
-    connection.query(zapytanie, [user], (blad, wiersze) => {
-        if (blad) return res.json({error: blad.message});
-        res.json({opinie: wiersze});
-    });
+	const { user } = req.query;
+	const zapytanie = "SELECT * FROM opinie WHERE oceniany = ? ORDER BY data_dodania DESC";
+	connection.query(zapytanie, [user], (blad, wiersze) => {
+		if (blad) return res.json({error: blad.message});
+		res.json({opinie: wiersze});
+	});
 });
 
 app.listen(PORT, () => {
