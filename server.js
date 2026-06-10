@@ -29,7 +29,8 @@ initConnection.connect((blad) => {
 
 					const skryptInit = fs.readFileSync('./init.sql', 'utf8');
 					initConnection.query(skryptInit, (bladSkryptu) => {
-						if (bladSkryptu) console.error('Błąd init.sql:', bladSkryptu.message);
+						if (bladSkryptu)
+							console.error('Błąd init.sql:', bladSkryptu.message);
 						else console.log('Baza danych zainicjowana pomyślnie.');
 						initConnection.end();
 					});
@@ -381,11 +382,76 @@ app.put('/api/admin/wymiany/:id/status', (req, res) => {
 	const idWymiany = req.params.id;
 	const { status } = req.body;
 
-	const zapytanie = 'UPDATE wymiany SET status = ? WHERE id = ?';
-	connection.query(zapytanie, [status, idWymiany], (blad, wynik) => {
-		if (blad) return res.status(500).json({ error: blad.message });
-		res.json({ message: 'Status transakcji został zaktualizowany.' });
-	});
+	// Jeśli admin próbuje ODBLOKOWAĆ transakcję
+	if (status === 'oczekuje') {
+		connection.query(
+			'SELECT id_ksiazki_oferowanej, id_ksiazki_zadanej FROM wymiany WHERE id = ?',
+			[idWymiany],
+			(blad, wiersze) => {
+				if (blad) return res.status(500).json({ error: blad.message });
+				if (wiersze.length === 0)
+					return res.status(404).json({ error: 'Nie znaleziono transakcji.' });
+
+				const { id_ksiazki_oferowanej, id_ksiazki_zadanej } = wiersze[0];
+
+				// 1. Sprawdzamy czy powiązania nadal istnieją (ON DELETE SET NULL w bazie zmienia usunięte książki na NULL)
+				if (!id_ksiazki_oferowanej || !id_ksiazki_zadanej) {
+					connection.query(
+						"UPDATE wymiany SET status = 'odrzucona' WHERE id = ?",
+						[idWymiany],
+					);
+					return res.status(400).json({
+						error:
+							'Nie można odblokować. Jedna lub obie książki zostały już wymienione lub usunięte przez właściciela.',
+					});
+				}
+
+				// 2. Sprawdzamy fizycznie w tabeli Ksiazki, czy książki są nadal na półkach
+				connection.query(
+					'SELECT id FROM Ksiazki WHERE id IN (?, ?)',
+					[id_ksiazki_oferowanej, id_ksiazki_zadanej],
+					(blad2, ksiazki) => {
+						if (blad2) return res.status(500).json({ error: blad2.message });
+
+						if (
+							ksiazki.length !== 2 &&
+							id_ksiazki_oferowanej !== id_ksiazki_zadanej
+						) {
+							connection.query(
+								"UPDATE wymiany SET status = 'odrzucona' WHERE id = ?",
+								[idWymiany],
+							);
+							return res.status(400).json({
+								error:
+									'Nie można odblokować. Książki nie istnieją już na półkach.',
+							});
+						}
+
+						// Wszystko jest w porządku, odblokowujemy
+						connection.query(
+							'UPDATE wymiany SET status = ? WHERE id = ?',
+							[status, idWymiany],
+							(blad3) => {
+								if (blad3)
+									return res.status(500).json({ error: blad3.message });
+								res.json({
+									message:
+										'Transakcja została odblokowana i wróciła do oczekujących.',
+								});
+							},
+						);
+					},
+				);
+			},
+		);
+	} else {
+		// Normalne blokowanie
+		const zapytanie = 'UPDATE wymiany SET status = ? WHERE id = ?';
+		connection.query(zapytanie, [status, idWymiany], (blad) => {
+			if (blad) return res.status(500).json({ error: blad.message });
+			res.json({ message: 'Transakcja została zablokowana.' });
+		});
+	}
 });
 
 app.delete('/api/admin/wymiany/:id', (req, res) => {
@@ -394,7 +460,9 @@ app.delete('/api/admin/wymiany/:id', (req, res) => {
 	const zapytanie = "UPDATE wymiany SET status = 'odrzucona' WHERE id = ?";
 	connection.query(zapytanie, [idWymiany], (blad, wynik) => {
 		if (blad) return res.status(500).json({ error: blad.message });
-		res.json({ message: 'Transakcja została odrzucona (usunięta przez admina).' });
+		res.json({
+			message: 'Transakcja została odrzucona (usunięta przez admina).',
+		});
 	});
 });
 
@@ -411,7 +479,9 @@ app.delete('/api/admin/opinie/:id', (req, res) => {
 	const zapytanie = 'DELETE FROM opinie WHERE id = ?';
 	connection.query(zapytanie, [idOpinii], (blad, wynik) => {
 		if (blad) return res.status(500).json({ error: blad.message });
-		res.json({ message: 'Opinia została pomyślnie usunięta przez administratora.' });
+		res.json({
+			message: 'Opinia została pomyślnie usunięta przez administratora.',
+		});
 	});
 });
 
@@ -519,6 +589,20 @@ app.put('/api/wymiany/:id', (req, res) => {
 			const nowyStatus =
 				status === 'zaakceptowana' ? 'zakonczona' : 'odrzucona';
 
+			// ZABEZPIECZENIE: Użytkownik próbuje zaakceptować, ale ktoś przed sekundą usunął książkę z półki
+			if (nowyStatus === 'zakonczona' && (!idOferowanej || !idZadanej)) {
+				connection.query(
+					"UPDATE wymiany SET status = 'odrzucona' WHERE id = ?",
+					[id],
+				);
+				return res
+					.status(400)
+					.json({
+						error:
+							'Transakcja nieważna. Jedna z książek zniknęła już z systemu.',
+					});
+			}
+
 			connection.query(
 				'UPDATE wymiany SET status = ? WHERE id = ?',
 				[nowyStatus, id],
@@ -559,7 +643,8 @@ app.put('/api/wymiany/:id', (req, res) => {
 
 						const placeholdery = idsDoSprawdzenia.map(() => '?').join(', ');
 						connection.query(
-							`UPDATE wymiany SET status = 'odrzucona' WHERE id != ? AND status = 'oczekuje' AND (id_ksiazki_oferowanej IN (${placeholdery}) OR id_ksiazki_zadanej IN (${placeholdery}))`,
+							// KLUCZOWA ZMIANA: Dodano zabijanie zablokowanych transakcji (status IN ('oczekuje', 'zablokowana'))
+							`UPDATE wymiany SET status = 'odrzucona' WHERE id != ? AND status IN ('oczekuje', 'zablokowana') AND (id_ksiazki_oferowanej IN (${placeholdery}) OR id_ksiazki_zadanej IN (${placeholdery}))`,
 							[id, ...idsDoSprawdzenia, ...idsDoSprawdzenia],
 							(blad3) => {
 								if (blad3) return res.json({ error: blad3.message });
@@ -578,25 +663,37 @@ app.put('/api/wymiany/:id', (req, res) => {
 app.post('/api/opinie', (req, res) => {
 	const { id_wymiany, oceniajacy, oceniany, ocena, komentarz } = req.body;
 
-	const zapytanieSprawdz = "SELECT * FROM opinie WHERE id_wymiany = ? AND oceniajacy = ?";
-	connection.query(zapytanieSprawdz, [id_wymiany, oceniajacy], (blad, wiersze) => {
-		if (blad) return res.json({error: blad.message});
-		if (wiersze.length > 0) return res.json({error: "Już wystawiłeś opinię za tę wymianę!"});
+	const zapytanieSprawdz =
+		'SELECT * FROM opinie WHERE id_wymiany = ? AND oceniajacy = ?';
+	connection.query(
+		zapytanieSprawdz,
+		[id_wymiany, oceniajacy],
+		(blad, wiersze) => {
+			if (blad) return res.json({ error: blad.message });
+			if (wiersze.length > 0)
+				return res.json({ error: 'Już wystawiłeś opinię za tę wymianę!' });
 
-		const zapytanieWstaw = "INSERT INTO opinie (id_wymiany, oceniajacy, oceniany, ocena, komentarz) VALUES (?, ?, ?, ?, ?)";
-		connection.query(zapytanieWstaw, [id_wymiany, oceniajacy, oceniany, ocena, komentarz], (bladWstaw) => {
-			if (bladWstaw) return res.json({error: bladWstaw.message});
-			res.json({message: "Opinia została pomyślnie dodana!"});
-		});
-	});
+			const zapytanieWstaw =
+				'INSERT INTO opinie (id_wymiany, oceniajacy, oceniany, ocena, komentarz) VALUES (?, ?, ?, ?, ?)';
+			connection.query(
+				zapytanieWstaw,
+				[id_wymiany, oceniajacy, oceniany, ocena, komentarz],
+				(bladWstaw) => {
+					if (bladWstaw) return res.json({ error: bladWstaw.message });
+					res.json({ message: 'Opinia została pomyślnie dodana!' });
+				},
+			);
+		},
+	);
 });
 
 app.get('/api/opinie', (req, res) => {
 	const { user } = req.query;
-	const zapytanie = "SELECT * FROM opinie WHERE oceniany = ? ORDER BY data_dodania DESC";
+	const zapytanie =
+		'SELECT * FROM opinie WHERE oceniany = ? ORDER BY data_dodania DESC';
 	connection.query(zapytanie, [user], (blad, wiersze) => {
-		if (blad) return res.json({error: blad.message});
-		res.json({opinie: wiersze});
+		if (blad) return res.json({ error: blad.message });
+		res.json({ opinie: wiersze });
 	});
 });
 
